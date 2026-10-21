@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AES-256 Live Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Reset ─────────────────────────────────────────── */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root{
+      --bg:        #080c14;
+      --bg2:       #0d1320;
+      --surface:   #111827;
+      --surface2:  #1a2236;
+      --border:    #1e2d45;
+      --border2:   #2a3f5f;
+      --accent:    #3b82f6;
+      --accent2:   #6366f1;
+      --green:     #10b981;
+      --red:       #ef4444;
+      --amber:     #f59e0b;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --muted2:    #94a3b8;
+      --radius:    14px;
+      --radius-sm: 8px;
+      --glow-blue: 0 0 24px rgba(59,130,246,0.25);
+      --glow-green:0 0 24px rgba(16,185,129,0.25);
+      --glow-red:  0 0 24px rgba(239,68,68,0.25);
+    }
+
+    html{scroll-behavior:smooth}
+
+    body{
+      font-family:'Inter',system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:0 0 80px;
+      overflow-x:hidden;
+    }
+
+    /* ── Animated background ──────────────────────────── */
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(59,130,246,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(99,102,241,0.06) 0%, transparent 55%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* ── HEADER ────────────────────────────────────────── */
+    header{
+      position:relative;
+      padding:64px 24px 48px;
+      text-align:center;
+      overflow:hidden;
+    }
+    header::after{
+      content:'';
+      position:absolute;
+      bottom:0;left:0;right:0;
+      height:1px;
+      background:linear-gradient(90deg,transparent,var(--border2),transparent);
+    }
+    .header-inner{position:relative;z-index:1;}
+
+    .header-lock{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:72px;height:72px;
+      border-radius:20px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:var(--glow-blue),0 8px 32px rgba(59,130,246,0.3);
+      font-size:2rem;
+      margin-bottom:20px;
+      animation:float 4s ease-in-out infinite;
+    }
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+    header h1{
+      font-size:clamp(2rem,5vw,3.2rem);
+      font-weight:800;
+      letter-spacing:-1px;
+      background:linear-gradient(135deg,#fff 30%,#94a3b8);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    header h1 .accent{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    header .sub{
+      margin-top:10px;
+      font-size:1.05rem;
+      color:var(--muted2);
+      font-weight:400;
+    }
+    .badge-row{
+      display:flex;justify-content:center;flex-wrap:wrap;gap:8px;
+      margin-top:20px;
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(59,130,246,0.08);
+      border:1px solid rgba(59,130,246,0.2);
+      border-radius:20px;padding:5px 14px;
+      font-size:0.75rem;font-weight:600;color:var(--accent);
+      letter-spacing:0.3px;
+    }
+    .badge.green{
+      background:rgba(16,185,129,0.08);
+      border-color:rgba(16,185,129,0.2);
+      color:var(--green);
+    }
+    .badge.purple{
+      background:rgba(99,102,241,0.08);
+      border-color:rgba(99,102,241,0.2);
+      color:#a5b4fc;
+    }
+
+    /* ── MAIN WRAP ─────────────────────────────────────── */
+    .page{
+      position:relative;z-index:1;
+      max-width:920px;margin:0 auto;
+      padding:0 20px;
+    }
+
+    /* ── HOW IT WORKS ──────────────────────────────────── */
+    .how-section{
+      margin:40px 0;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+    .how-section::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));
+    }
+    .section-title{
+      font-size:0.72rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:1.5px;
+      color:var(--accent);margin-bottom:20px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .section-title::after{
+      content:'';flex:1;height:1px;
+      background:linear-gradient(90deg,var(--border),transparent);
+    }
+
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+    .step{
+      background:var(--bg2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:16px;
+      transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;
+      cursor:default;
+    }
+    .step:hover{
+      border-color:var(--border2);
+      transform:translateY(-2px);
+      box-shadow:0 8px 24px rgba(0,0,0,0.3);
+    }
+    .step-num{
+      font-size:0.65rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:1.5px;
+      color:var(--accent);margin-bottom:8px;
+    }
+    .step-icon{font-size:1.4rem;margin-bottom:6px;display:block;}
+    .step h3{font-size:0.88rem;font-weight:600;margin-bottom:4px;}
+    .step p{font-size:0.78rem;color:var(--muted2);line-height:1.6;}
+
+    /* ── CARDS ─────────────────────────────────────────── */
+    .cards{display:flex;flex-direction:column;gap:20px;}
+
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+      transition:border-color 0.3s,box-shadow 0.3s;
+    }
+    .card:hover{border-color:var(--border2);}
+
+    .card-header{
+      display:flex;align-items:center;gap:10px;
+      margin-bottom:22px;
+      padding-bottom:16px;
+      border-bottom:1px solid var(--border);
+    }
+    .card-icon{
+      width:36px;height:36px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.1rem;flex-shrink:0;
+    }
+    .card-icon.blue{background:rgba(59,130,246,0.15);}
+    .card-icon.red {background:rgba(239,68,68,0.15);}
+    .card-icon.green{background:rgba(16,185,129,0.15);}
+    .card-icon.purple{background:rgba(99,102,241,0.15);}
+    .card-title-text{
+      font-size:0.95rem;font-weight:700;letter-spacing:-0.2px;
+    }
+    .card-subtitle{
+      font-size:0.75rem;color:var(--muted);margin-top:1px;
+    }
+
+    .card.encrypt-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+    }
+    .card.output-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--red),#f97316);
+    }
+    .card.decrypt-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--green),#06b6d4);
+    }
+    .card.log-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--accent2),var(--accent));
+    }
+
+    /* ── FORM ELEMENTS ─────────────────────────────────── */
+    .field{margin-bottom:18px;}
+    .field:last-of-type{margin-bottom:0;}
+
+    label{
+      display:block;
+      font-size:0.75rem;font-weight:600;
+      text-transform:uppercase;letter-spacing:0.8px;
+      color:var(--muted2);margin-bottom:7px;
+    }
+
+    input[type="text"],textarea{
+      width:100%;
+      background:var(--bg2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      color:var(--text);
+      padding:11px 14px;
+      font-size:0.87rem;
+      font-family:'JetBrains Mono',monospace;
+      outline:none;
+      transition:border-color 0.2s,box-shadow 0.2s;
+      line-height:1.5;
+    }
+    input[type="text"]:focus,textarea:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(59,130,246,0.12);
+    }
+    textarea{resize:vertical;min-height:90px;}
+
+    /* ── CALLOUT ───────────────────────────────────────── */
+    .callout{
+      display:flex;gap:12px;align-items:flex-start;
+      background:rgba(59,130,246,0.06);
+      border:1px solid rgba(59,130,246,0.15);
+      border-radius:var(--radius-sm);
+      padding:12px 14px;
+      margin-top:16px;
+      font-size:0.81rem;color:var(--muted2);line-height:1.65;
+    }
+    .callout-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
+    .callout strong{color:var(--text);}
+
+    /* ── PIPELINE ──────────────────────────────────────── */
+    .pipeline-wrap{
+      background:var(--bg2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:16px;
+      margin-top:16px;
+      overflow-x:auto;
+    }
+    .aes-visual{
+      display:flex;align-items:center;gap:6px;
+      min-width:max-content;
+    }
+    .aes-block{
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:10px 14px;
+      font-size:0.72rem;font-weight:600;
+      font-family:'JetBrains Mono',monospace;
+      color:var(--muted);text-align:center;
+      transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+      white-space:nowrap;min-width:80px;
+    }
+    .aes-block.active{
+      border-color:var(--accent);
+      color:var(--accent);
+      background:rgba(59,130,246,0.1);
+      box-shadow:0 0 16px rgba(59,130,246,0.3),0 0 0 1px var(--accent);
+      transform:scale(1.05);
+    }
+    .aes-block.done{
+      border-color:var(--green);
+      color:var(--green);
+      background:rgba(16,185,129,0.08);
+    }
+    .aes-arrow{
+      color:var(--muted);font-size:0.85rem;
+      flex-shrink:0;padding:0 2px;
+    }
+
+    /* ── BUTTONS ───────────────────────────────────────── */
+    .btn-row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+
+    button{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:10px 20px;border:none;border-radius:var(--radius-sm);
+      font-size:0.85rem;font-weight:600;font-family:'Inter',sans-serif;
+      cursor:pointer;
+      transition:all 0.2s;
+      letter-spacing:0.2px;
+    }
+    button:active{transform:scale(0.97);}
+    button:disabled{opacity:0.45;cursor:not-allowed;}
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;
+      box-shadow:0 4px 14px rgba(59,130,246,0.35);
+    }
+    .btn-primary:hover:not(:disabled){
+      box-shadow:0 4px 20px rgba(59,130,246,0.5);
+      transform:translateY(-1px);
+    }
+    .btn-success{
+      background:linear-gradient(135deg,var(--green),#06b6d4);
+      color:#fff;
+      box-shadow:0 4px 14px rgba(16,185,129,0.35);
+    }
+    .btn-success:hover:not(:disabled){
+      box-shadow:0 4px 20px rgba(16,185,129,0.5);
+      transform:translateY(-1px);
+    }
+    .btn-ghost{
+      background:var(--bg2);
+      border:1px solid var(--border);
+      color:var(--muted2);
+    }
+    .btn-ghost:hover:not(:disabled){
+      border-color:var(--border2);
+      color:var(--text);
+      background:var(--surface2);
+    }
+
+    /* ── OUTPUT BOX ────────────────────────────────────── */
+    .output-box{
+      background:var(--bg2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:14px 14px 14px 14px;
+      margin-top:10px;
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.8rem;
+      word-break:break-all;
+      min-height:60px;
+      position:relative;
+      line-height:1.7;
+      transition:border-color 0.3s,box-shadow 0.3s;
+    }
+    .output-box.has-value{
+      border-color:var(--border2);
+      box-shadow:inset 0 0 20px rgba(0,0,0,0.2);
+    }
+    .output-box.empty{color:var(--muted);font-style:italic;}
+    .output-label{
+      display:inline-block;margin-bottom:8px;
+      font-size:0.65rem;font-weight:700;letter-spacing:1px;
+      text-transform:uppercase;color:var(--muted);
+      font-family:'Inter',sans-serif;
+    }
+
+    .copy-btn{
+      position:absolute;top:10px;right:10px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      color:var(--muted2);
+      border-radius:6px;
+      padding:4px 10px;
+      font-size:0.7rem;font-weight:600;
+      font-family:'Inter',sans-serif;
+      cursor:pointer;
+      transition:all 0.2s;
+      letter-spacing:0.3px;
+    }
+    .copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+    /* ── KEY GRID ──────────────────────────────────────── */
+    .key-grid{
+      display:grid;
+      grid-template-columns:repeat(16,1fr);
+      gap:3px;margin-top:10px;
+    }
+    .key-byte{
+      background:rgba(59,130,246,0.08);
+      border:1px solid rgba(59,130,246,0.2);
+      border-radius:4px;text-align:center;padding:6px 0;
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.6rem;color:var(--accent);
+      transition:background 0.3s;
+    }
+    .key-byte:hover{background:rgba(59,130,246,0.18);}
+
+    /* ── STATS ROW ─────────────────────────────────────── */
+    .stats-row{
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;
+    }
+    .stat-chip{
+      background:var(--bg2);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:5px 14px;
+      font-size:0.75rem;color:var(--muted2);
+      display:flex;align-items:center;gap:5px;
+    }
+    .stat-chip strong{color:var(--text);font-weight:600;}
+
+    /* ── PROCESS LOG ───────────────────────────────────── */
+    #process-log{
+      background:var(--bg);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:16px;
+      font-family:'JetBrains Mono',monospace;
+      font-size:0.78rem;
+      min-height:130px;max-height:280px;
+      overflow-y:auto;line-height:2;
+    }
+    #process-log::-webkit-scrollbar{width:4px;}
+    #process-log::-webkit-scrollbar-track{background:transparent;}
+    #process-log::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+    .log-line{display:flex;gap:12px;align-items:baseline;}
+    .log-ts{color:var(--muted);min-width:90px;font-size:0.72rem;}
+    .log-ok  {color:var(--green);}
+    .log-info{color:var(--accent);}
+    .log-warn{color:var(--amber);}
+    .log-err {color:var(--red);}
+
+    /* ── STATUS PILL ───────────────────────────────────── */
+    .status-pill{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:0.82rem;font-weight:600;
+      padding:8px 16px;border-radius:var(--radius-sm);
+      margin-top:14px;
+    }
+    .status-pill.ok{
+      background:rgba(16,185,129,0.1);
+      color:var(--green);
+      border:1px solid rgba(16,185,129,0.3);
+      box-shadow:var(--glow-green);
+    }
+    .status-pill.err{
+      background:rgba(239,68,68,0.1);
+      color:var(--red);
+      border:1px solid rgba(239,68,68,0.3);
+      box-shadow:var(--glow-red);
+    }
+
+    /* ── FOOTER ────────────────────────────────────────── */
+    footer{
+      text-align:center;margin-top:60px;
+      padding:24px;
+      border-top:1px solid var(--border);
+      font-size:0.78rem;color:var(--muted);
+      position:relative;z-index:1;
+    }
+    footer span{color:var(--muted2);}
+
+    /* ── SCROLLBAR GLOBAL ──────────────────────────────── */
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;}
+
+    @media(max-width:540px){
+      .key-grid{grid-template-columns:repeat(8,1fr);}
+      .card{padding:20px 16px;}
+      header{padding:40px 16px 32px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ═════════════════════════════════════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="header-lock">&#128274;</div>
+    <h1><span class="accent">AES-256</span> Live Demo</h1>
+    <p class="sub">Real encryption &amp; decryption &mdash; powered by your browser&rsquo;s built-in crypto engine</p>
+    <div class="badge-row">
+      <span class="badge">&#9679; AES-256-CBC</span>
+      <span class="badge green">&#9679; Web Crypto API</span>
+      <span class="badge purple">&#9679; Zero Server &middot; 100% Local</span>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ══ HOW IT WORKS ══════════════════════════════════════ -->
+  <div class="how-section">
+    <div class="section-title">&#128218; How AES-256 Works</div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-icon">&#128273;</span>
+        <div class="step-num">Step 1</div>
+        <h3>Key Expansion</h3>
+        <p>Password &rarr; <strong>PBKDF2 + SHA-256</strong> &rarr; 256-bit key (32 bytes).</p>
+      </div>
+      <div class="step">
+        <span class="step-icon">&#127922;</span>
+        <div class="step-num">Step 2</div>
+        <h3>IV Generation</h3>
+        <p>A random <strong>128-bit IV</strong> is generated — every encryption is unique.</p>
+      </div>
+      <div class="step">
+        <span class="step-icon">&#129521;</span>
+        <div class="step-num">Step 3</div>
+        <h3>Block Splitting</h3>
+        <p>Message split into <strong>128-bit blocks</strong>; each chained with the previous (CBC).</p>
+      </div>
+      <div class="step">
+        <span class="step-icon">&#128260;</span>
+        <div class="step-num">Step 4</div>
+        <h3>14 Rounds</h3>
+        <p>SubBytes &rarr; ShiftRows &rarr; MixColumns &rarr; AddRoundKey, repeated <strong>14&times;</strong>.</p>
+      </div>
+      <div class="step">
+        <span class="step-icon">&#128230;</span>
+        <div class="step-num">Step 5</div>
+        <h3>Output</h3>
+        <p>IV + ciphertext packed together and encoded as <strong>Base64</strong>.</p>
+      </div>
+      <div class="step">
+        <span class="step-icon">&#128275;</span>
+        <div class="step-num">Decrypt</div>
+        <h3>Reversal</h3>
+        <p>Same key + IV runs all <strong>14 rounds in reverse</strong> to recover the original message.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CARDS ════════════════════════════════════════════ -->
+  <div class="cards">
+
+    <!-- ── Encrypt Card ─── -->
+    <div class="card encrypt-card">
+      <div class="card-header">
+        <div class="card-icon blue">&#128274;</div>
+        <div>
+          <div class="card-title-text">Encrypt a Message</div>
+          <div class="card-subtitle">Enter your plaintext and a password to generate ciphertext</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="plaintext">&#128221; Plain Text &mdash; message to encrypt</label>
+        <textarea id="plaintext">Hello, Judges! This message will be encrypted with AES-256.</textarea>
+      </div>
+
+      <div class="field">
+        <label for="password">&#128273; Encryption Password (shared secret key)</label>
+        <input type="text" id="password" value="MySecretPassword123!"/>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">&#128161;</span>
+        <div>
+          <strong>Key Derivation:</strong> Your password is stretched with
+          <strong>PBKDF2 (100,000 rounds of SHA-256)</strong> into a full 256-bit key.
+          A random <strong>128-bit IV</strong> is generated each time &mdash; so
+          <em>the same message + password always produces a different ciphertext</em>.
+        </div>
+      </div>
+
+      <label style="margin-top:20px;display:block;">&#9881; AES-256-CBC Live Pipeline</label>
+      <div class="pipeline-wrap">
+        <div class="aes-visual">
+          <div class="aes-block" id="s-plaintext">Plaintext</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-keyexp">Key<br/>Expansion</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-iv">IV<br/>Generation</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-subbytes">SubBytes<br/>&times;14</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-shiftrows">ShiftRows<br/>&times;14</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-mixcols">MixColumns<br/>&times;13</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-addroundkey">AddRoundKey<br/>&times;14</div>
+          <span class="aes-arrow">&#8594;</span>
+          <div class="aes-block" id="s-ciphertext">Ciphertext</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-encrypt" onclick="doEncrypt()">
+          &#128274; Encrypt
+        </button>
+        <button class="btn-ghost" onclick="loadExample()">&#128203; Load Example</button>
+        <button class="btn-ghost" onclick="clearAll()">&#128465; Clear</button>
+      </div>
+    </div>
+
+    <!-- ── Encrypted Output Card ─── -->
+    <div class="card output-card">
+      <div class="card-header">
+        <div class="card-icon red">&#128202;</div>
+        <div>
+          <div class="card-title-text">Encrypted Output</div>
+          <div class="card-subtitle">Ciphertext, key visualisation &amp; statistics</div>
+        </div>
+      </div>
+
+      <label>&#128274; Ciphertext &mdash; Base64 encoded (IV prepended)</label>
+      <div class="output-box empty" id="ciphertext-out">
+        <div class="output-label">ciphertext &middot; base64</div>
+        <span id="cipher-text">Click Encrypt to see output&hellip;</span>
+        <button class="copy-btn" onclick="copyText('cipher-text')" style="display:none" id="copy-cipher">&#128203; Copy</button>
+      </div>
+
+      <label style="margin-top:18px;">&#128207; 256-bit Key Bytes &mdash; 32 bytes in hex</label>
+      <div class="key-grid" id="key-grid"></div>
+
+      <label style="margin-top:18px;">&#128202; Statistics</label>
+      <div class="stats-row">
+        <div class="stat-chip">Plaintext bytes: <strong id="stat-pt">&mdash;</strong></div>
+        <div class="stat-chip">Ciphertext bytes: <strong id="stat-ct">&mdash;</strong></div>
+        <div class="stat-chip">Key size: <strong>256-bit</strong></div>
+        <div class="stat-chip">Block size: <strong>128-bit</strong></div>
+        <div class="stat-chip">Mode: <strong>CBC</strong></div>
+        <div class="stat-chip">IV size: <strong>128-bit</strong></div>
+      </div>
+    </div>
+
+    <!-- ── Decrypt Card ─── -->
+    <div class="card decrypt-card">
+      <div class="card-header">
+        <div class="card-icon green">&#128275;</div>
+        <div>
+          <div class="card-title-text">Decrypt</div>
+          <div class="card-subtitle">Recover the original message from ciphertext + password</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cipher-input">&#128274; Ciphertext to Decrypt (Base64)</label>
+        <textarea id="cipher-input" placeholder="Paste ciphertext here, or click Encrypt above to auto-fill&hellip;" style="min-height:65px;"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="dec-password">&#128273; Decryption Password</label>
+        <input type="text" id="dec-password" value="MySecretPassword123!"/>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">&#128161;</span>
+        <div>
+          <strong>How decryption works:</strong> Base64 decoded &rarr; first 16 bytes = IV &rarr;
+          remaining = ciphertext. AES runs <strong>14 rounds in reverse</strong> with the same key.
+          A <em>wrong password causes a padding error</em> &mdash; try it to see the failure!
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-success" onclick="doDecrypt()">&#128275; Decrypt</button>
+        <button class="btn-ghost" onclick="useEncrypted()">&#8679; Use Encrypted Output</button>
+      </div>
+
+      <label style="margin-top:20px;display:block;">&#9989; Decrypted Plain Text</label>
+      <div class="output-box empty" id="plaintext-out">
+        <div class="output-label">decrypted plaintext</div>
+        <span id="dec-text">Click Decrypt to see output&hellip;</span>
+        <button class="copy-btn" onclick="copyText('dec-text')" style="display:none" id="copy-dec">&#128203; Copy</button>
+      </div>
+
+      <div id="verify-status"></div>
+    </div>
+
+    <!-- ── Log Card ─── -->
+    <div class="card log-card">
+      <div class="card-header">
+        <div class="card-icon purple">&#128196;</div>
+        <div>
+          <div class="card-title-text">Live Process Log</div>
+          <div class="card-subtitle">Real-time step-by-step execution trace with hex values &amp; timings</div>
+        </div>
+      </div>
+      <div id="process-log">
+        <div class="log-line">
+          <span class="log-ts">ready</span>
+          <span class="log-info">AES-256-CBC demo loaded. Web Crypto API: <strong id="crypto-support">checking&hellip;</strong></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cards -->
+</div><!-- /page -->
+
+<footer>
+  <span>AES-256-CBC</span> &middot; <span>Web Crypto API (SubtleCrypto)</span> &middot;
+  <span>Runs 100% in your browser</span> &middot; <span>No data leaves this page</span>
+</footer>
+
+<!-- ══ JAVASCRIPT ═══════════════════════════════════════════ -->
+<script>
+/* ── Utilities ──────────────────────────────────────────── */
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+function ts() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-GB',{hour12:false}) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+}
+
+function log(msg, type='info') {
+  const el = document.getElementById('process-log');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = '<span class="log-ts">'+ts()+'</span><span class="log-'+type+'">'+msg+'</span>';
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function toHex(buf) {
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function toBase64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+function fromBase64(str) {
+  const b = atob(str);
+  const u = new Uint8Array(b.length);
+  for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i);
+  return u.buffer;
+}
+
+/* ── Key Derivation: password -> PBKDF2 -> 256-bit AES key ── */
+async function deriveKey(password) {
+  const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const salt = enc.encode('AES256-DEMO-SALT');
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'},
+    km,
+    {name:'AES-CBC', length:256},
+    true,
+    ['encrypt','decrypt']
+  );
+}
+
+/* ── Pipeline Animation ─────────────────────────────────── */
+const stepIds = ['s-plaintext','s-keyexp','s-iv','s-subbytes','s-shiftrows','s-mixcols','s-addroundkey','s-ciphertext'];
+
+function resetSteps() {
+  stepIds.forEach(id=>{ const e=document.getElementById(id); e.classList.remove('active','done'); });
+}
+
+async function animateSteps() {
+  resetSteps();
+  for(let i=0;i<stepIds.length;i++){
+    const el=document.getElementById(stepIds[i]);
+    el.classList.add('active');
+    await sleep(300);
+    el.classList.remove('active');
+    el.classList.add('done');
+  }
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ── Display 32 key bytes as hex grid ───────────────────── */
+async function displayKeyGrid(cryptoKey) {
+  const exported = await crypto.subtle.exportKey('raw', cryptoKey);
+  const bytes = new Uint8Array(exported);
+  const grid = document.getElementById('key-grid');
+  grid.innerHTML='';
+  bytes.forEach(b=>{
+    const d=document.createElement('div');
+    d.className='key-byte';
+    d.textContent=b.toString(16).padStart(2,'0');
+    grid.appendChild(d);
+  });
+  return bytes;
+}
+
+/* ── ENCRYPT ─────────────────────────────────────────────── */
+async function doEncrypt() {
+  const btn = document.getElementById('btn-encrypt');
+  btn.disabled = true;
+  try {
+    const plaintext = document.getElementById('plaintext').value;
+    const password  = document.getElementById('password').value;
+
+    if(!plaintext.trim()){ log('WARNING: Plaintext is empty.','warn'); btn.disabled=false; return; }
+    if(!password.trim()) { log('WARNING: Password is empty.','warn');  btn.disabled=false; return; }
+
+    log('Starting AES-256-CBC encryption...','info');
+    log('Plaintext length: '+plaintext.length+' chars ('+enc.encode(plaintext).byteLength+' bytes)','info');
+
+    log('Deriving 256-bit key from password (PBKDF2 + SHA-256, 100,000 iterations)...','info');
+    const key = await deriveKey(password);
+    const keyBytes = await displayKeyGrid(key);
+    log('Key derived: '+toHex(keyBytes.buffer),'ok');
+
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    log('Random IV generated: '+toHex(iv.buffer),'ok');
+
+    animateSteps(); // non-blocking visual
+
+    log('Running AES-CBC encryption (256-bit key, 14 rounds per block)...','info');
+    const t0 = performance.now();
+    const cipherBuf = await crypto.subtle.encrypt({name:'AES-CBC', iv}, key, enc.encode(plaintext));
+    const elapsed = (performance.now()-t0).toFixed(2);
+    log('Encryption complete in '+elapsed+' ms. Ciphertext: '+cipherBuf.byteLength+' bytes','ok');
+
+    // Pack: [16-byte IV][ciphertext] -> Base64
+    const combined = new Uint8Array(16+cipherBuf.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(cipherBuf), 16);
+    const b64 = toBase64(combined.buffer);
+
+    log('Output (IV+Ciphertext, Base64): '+b64.substring(0,48)+'...','ok');
+
+    const ctEl = document.getElementById('cipher-text');
+    ctEl.textContent = b64;
+    const box = document.getElementById('ciphertext-out');
+    box.classList.remove('empty');
+    box.classList.add('has-value');
+    document.getElementById('copy-cipher').style.display='block';
+
+    // Auto-fill decrypt section
+    document.getElementById('cipher-input').value = b64;
+    document.getElementById('dec-password').value = password;
+
+    document.getElementById('stat-pt').textContent = enc.encode(plaintext).byteLength;
+    document.getElementById('stat-ct').textContent = combined.byteLength;
+
+    log('Done! Scroll to Decrypt section to verify decryption.','ok');
+  } catch(e) {
+    log('Encryption error: '+e.message,'err');
+  }
+  btn.disabled = false;
+}
+
+/* ── DECRYPT ─────────────────────────────────────────────── */
+async function doDecrypt() {
+  try {
+    const b64      = document.getElementById('cipher-input').value.trim();
+    const password = document.getElementById('dec-password').value;
+
+    if(!b64)            { log('WARNING: No ciphertext to decrypt.','warn'); return; }
+    if(!password.trim()){ log('WARNING: Password is empty.','warn');         return; }
+
+    log('Starting AES-256-CBC decryption...','info');
+
+    log('Deriving key from password...','info');
+    const key = await deriveKey(password);
+    const keyBytes = await displayKeyGrid(key);
+    log('Key: '+toHex(keyBytes.buffer),'ok');
+
+    let combined;
+    try { combined = new Uint8Array(fromBase64(b64)); }
+    catch(e){ log('Invalid Base64 input: '+e.message,'err'); return; }
+
+    if(combined.length < 17){ log('Data too short (need IV 16 bytes + at least 1 block)','err'); return; }
+
+    const iv         = combined.slice(0, 16);
+    const cipherdata = combined.slice(16);
+    log('IV extracted: '+toHex(iv.buffer),'ok');
+    log('Ciphertext block: '+cipherdata.byteLength+' bytes','ok');
+
+    log('Running AES-CBC decryption (14 inverse rounds per block)...','info');
+    let plainBuf;
+    try {
+      plainBuf = await crypto.subtle.decrypt({name:'AES-CBC', iv}, key, cipherdata);
+    } catch(e) {
+      log('DECRYPTION FAILED: Wrong password or corrupted/tampered data!','err');
+      showStatus(false);
+      return;
+    }
+
+    const plaintext = dec.decode(plainBuf);
+    log('Decryption successful! Plaintext: "'+plaintext.substring(0,60)+(plaintext.length>60?'...':'')+'"','ok');
+
+    const dtEl = document.getElementById('dec-text');
+    dtEl.textContent = plaintext;
+    const box = document.getElementById('plaintext-out');
+    box.classList.remove('empty');
+    box.classList.add('has-value');
+    document.getElementById('copy-dec').style.display='block';
+
+    showStatus(true, plaintext);
+  } catch(e) {
+    log('Unexpected error: '+e.message,'err');
+  }
+}
+
+/* ── Status Banner ─────────────────────────────────────── */
+function showStatus(ok, text='') {
+  const el = document.getElementById('verify-status');
+  if(ok) {
+    el.innerHTML = '<div class="status-pill ok">&#10004; Decryption successful &mdash; message perfectly recovered ('+enc.encode(text).byteLength+' bytes)</div>';
+  } else {
+    el.innerHTML = '<div class="status-pill err">&#10006; Decryption failed &mdash; wrong password or tampered ciphertext</div>';
+  }
+}
+
+/* ── Helpers ───────────────────────────────────────────── */
+function useEncrypted() {
+  const ct = document.getElementById('cipher-text').textContent;
+  if(ct && !ct.startsWith('Click')) {
+    document.getElementById('cipher-input').value = ct;
+    log('Auto-filled decrypt field with current ciphertext.','info');
+  } else {
+    log('No ciphertext yet. Encrypt something first.','warn');
+  }
+}
+
+function copyText(id) {
+  const t = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(t).then(()=>log('Copied to clipboard.','ok'));
+}
+
+function loadExample() {
+  document.getElementById('plaintext').value = 'AES-256 was adopted by the US government in 2001. Brute-forcing a 256-bit key would take longer than the age of the universe! Every block goes through 14 rounds of SubBytes, ShiftRows, MixColumns and AddRoundKey transformations.';
+  document.getElementById('password').value  = 'Judges@Presentation2024!';
+  log('Example loaded.','info');
+}
+
+function clearAll() {
+  ['plaintext','password','cipher-input','dec-password'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cipher-text').textContent = 'Click Encrypt to see output\u2026';
+  document.getElementById('dec-text').textContent    = 'Click Decrypt to see output\u2026';
+  ['ciphertext-out','plaintext-out'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.add('empty');
+    el.classList.remove('has-value');
+  });
+  document.getElementById('verify-status').innerHTML='';
+  document.getElementById('copy-cipher').style.display='none';
+  document.getElementById('copy-dec').style.display='none';
+  document.getElementById('key-grid').innerHTML='';
+  document.getElementById('stat-pt').textContent='\u2014';
+  document.getElementById('stat-ct').textContent='\u2014';
+  resetSteps();
+  log('Cleared.','info');
+}
+
+/* ── Init ──────────────────────────────────────────────── */
+document.getElementById('crypto-support').textContent =
+  (typeof crypto!=='undefined' && crypto.subtle) ? '\u2714 Yes (SubtleCrypto ready)' : '\u2716 No (upgrade your browser)';
+</script>
+</body>
+</html>
