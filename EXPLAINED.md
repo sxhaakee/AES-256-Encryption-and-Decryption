@@ -163,7 +163,7 @@ Plaintext:  [Block 1] [Block 2] [Block 3]
 Ciphertext: [Cipher1] [Cipher2] [Cipher3]
 ```
 
-This means each encrypted block **depends on all previous blocks** — making the encryption much stronger and patterns impossible to detect.
+This means each encrypted block **depends on all previous blocks** — makjking the encryption much stronger and patterns impossible to detect.
 
 ---
 

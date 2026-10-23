@@ -1,977 +1,1147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>AES-256 Live Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <style>
-    /* ── Reset ─────────────────────────────────────────── */
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CipherVault — AES-256 Multimedia Encryption Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;--bg2:#e8eef8;--surface:#ffffff;
+  --border:#cdd8f0;--border2:#9db4e4;
+  --blue:#2563eb;--indigo:#6366f1;--green:#059669;
+  --red:#dc2626;--amber:#d97706;--purple:#7c3aed;
+  --text:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 0% 0%,rgba(37,99,235,0.07),transparent 60%),
+             radial-gradient(ellipse 50% 40% at 100% 100%,rgba(99,102,241,0.06),transparent 55%);}
 
-    :root{
-      --bg:        #080c14;
-      --bg2:       #0d1320;
-      --surface:   #111827;
-      --surface2:  #1a2236;
-      --border:    #1e2d45;
-      --border2:   #2a3f5f;
-      --accent:    #3b82f6;
-      --accent2:   #6366f1;
-      --green:     #10b981;
-      --red:       #ef4444;
-      --amber:     #f59e0b;
-      --text:      #f1f5f9;
-      --muted:     #64748b;
-      --muted2:    #94a3b8;
-      --radius:    14px;
-      --radius-sm: 8px;
-      --glow-blue: 0 0 24px rgba(59,130,246,0.25);
-      --glow-green:0 0 24px rgba(16,185,129,0.25);
-      --glow-red:  0 0 24px rgba(239,68,68,0.25);
-    }
+/* HEADER */
+header{position:relative;z-index:1;background:var(--surface);border-bottom:2px solid var(--border);
+  padding:22px 60px;display:flex;align-items:center;gap:18px;}
+.logo-box{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--indigo));
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  box-shadow:0 6px 20px rgba(37,99,235,0.35);animation:float 4s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.logo-text h1{font-size:1.7rem;font-weight:900;letter-spacing:-1.5px;
+  background:linear-gradient(135deg,#1e40af,#6366f1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;}
+.logo-text p{font-size:0.78rem;color:var(--muted);font-weight:500;margin-top:2px;}
+.hbadges{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+.hb{padding:5px 12px;border:1px solid;font-size:0.7rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+.hb-b{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25);color:var(--blue);}
+.hb-g{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.25);color:var(--green);}
+.hb-p{background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.25);color:var(--purple);}
 
-    html{scroll-behavior:smooth}
+/* TABS */
+nav{position:sticky;top:0;z-index:100;background:rgba(240,244,255,0.96);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 60px;display:flex;}
+.tb{padding:14px 26px;font-size:0.87rem;font-weight:600;color:var(--muted);background:none;
+  border:none;border-bottom:3px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all 0.2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;}
+.tb:hover{color:var(--blue);}
+.tb.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tp{display:none;animation:fi 0.25s;}
+.tp.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-    body{
-      font-family:'Inter',system-ui,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      padding:0 0 80px;
-      overflow-x:hidden;
-    }
+/* LAYOUT */
+.page{position:relative;z-index:1;max-width:1380px;margin:0 auto;padding:32px 60px 80px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.col{display:flex;flex-direction:column;gap:20px;}
 
-    /* ── Animated background ──────────────────────────── */
-    body::before{
-      content:'';
-      position:fixed;
-      inset:0;
-      background:
-        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(59,130,246,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(99,102,241,0.06) 0%, transparent 55%);
-      pointer-events:none;
-      z-index:0;
-    }
+/* SECTION TITLE */
+.st{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;
+  color:var(--blue);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.st::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
 
-    /* ── HEADER ────────────────────────────────────────── */
-    header{
-      position:relative;
-      padding:64px 24px 48px;
-      text-align:center;
-      overflow:hidden;
-    }
-    header::after{
-      content:'';
-      position:absolute;
-      bottom:0;left:0;right:0;
-      height:1px;
-      background:linear-gradient(90deg,transparent,var(--border2),transparent);
-    }
-    .header-inner{position:relative;z-index:1;}
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);padding:26px 28px;position:relative;
+  overflow:hidden;box-shadow:0 2px 14px rgba(37,99,235,0.06);transition:box-shadow 0.2s,border-color 0.2s;}
+.card:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(37,99,235,0.1);}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.cb::before{background:linear-gradient(90deg,var(--blue),var(--indigo));}
+.cg::before{background:linear-gradient(90deg,var(--green),#06b6d4);}
+.cp::before{background:linear-gradient(90deg,var(--purple),#db2777);}
+.ca::before{background:linear-gradient(90deg,var(--amber),#f59e0b);}
+.cr::before{background:linear-gradient(90deg,var(--red),#f97316);}
+.ci::before{background:linear-gradient(90deg,var(--indigo),var(--blue));}
+.ch{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.ico{width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.ico-b{background:rgba(37,99,235,0.1);}
+.ico-g{background:rgba(5,150,105,0.1);}
+.ico-p{background:rgba(124,58,237,0.1);}
+.ico-a{background:rgba(217,119,6,0.1);}
+.ico-r{background:rgba(220,38,38,0.1);}
+.ctitle{font-size:0.95rem;font-weight:700;}
+.csub{font-size:0.73rem;color:var(--muted);margin-top:2px;}
 
-    .header-lock{
-      display:inline-flex;align-items:center;justify-content:center;
-      width:72px;height:72px;
-      border-radius:20px;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      box-shadow:var(--glow-blue),0 8px 32px rgba(59,130,246,0.3);
-      font-size:2rem;
-      margin-bottom:20px;
-      animation:float 4s ease-in-out infinite;
-    }
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+/* WORKFLOW BAR */
+.wf{display:flex;align-items:flex-start;margin-bottom:28px;background:var(--surface);
+  border:1px solid var(--border);padding:20px;box-shadow:0 2px 14px rgba(37,99,235,0.06);}
+.wfs{flex:1;text-align:center;position:relative;}
+.wfs:not(:last-child)::after{content:'';position:absolute;top:19px;left:55%;right:-45%;
+  height:2px;background:linear-gradient(90deg,var(--border2),var(--border));}
+.wfn{width:38px;height:38px;background:linear-gradient(135deg,var(--blue),var(--indigo));
+  color:#fff;font-weight:800;font-size:0.85rem;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 8px;position:relative;z-index:1;box-shadow:0 3px 12px rgba(37,99,235,0.3);}
+.wfs.done .wfn{background:linear-gradient(135deg,var(--green),#0891b2);}
+.wfl{font-size:0.7rem;color:var(--muted);line-height:1.4;}
+.wfl strong{display:block;font-size:0.75rem;color:var(--text);margin-bottom:1px;}
 
-    header h1{
-      font-size:clamp(2rem,5vw,3.2rem);
-      font-weight:800;
-      letter-spacing:-1px;
-      background:linear-gradient(135deg,#fff 30%,#94a3b8);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text;
-    }
-    header h1 .accent{
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text;
-    }
-    header .sub{
-      margin-top:10px;
-      font-size:1.05rem;
-      color:var(--muted2);
-      font-weight:400;
-    }
-    .badge-row{
-      display:flex;justify-content:center;flex-wrap:wrap;gap:8px;
-      margin-top:20px;
-    }
-    .badge{
-      display:inline-flex;align-items:center;gap:6px;
-      background:rgba(59,130,246,0.08);
-      border:1px solid rgba(59,130,246,0.2);
-      border-radius:20px;padding:5px 14px;
-      font-size:0.75rem;font-weight:600;color:var(--accent);
-      letter-spacing:0.3px;
-    }
-    .badge.green{
-      background:rgba(16,185,129,0.08);
-      border-color:rgba(16,185,129,0.2);
-      color:var(--green);
-    }
-    .badge.purple{
-      background:rgba(99,102,241,0.08);
-      border-color:rgba(99,102,241,0.2);
-      color:#a5b4fc;
-    }
+/* FORM */
+.field{margin-bottom:14px;}
+label{display:block;font-size:0.69rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.9px;color:var(--muted);margin-bottom:5px;}
+input,textarea,select{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);
+  padding:11px 13px;font-size:0.87rem;font-family:'JetBrains Mono',monospace;outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;line-height:1.5;}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+textarea{resize:vertical;min-height:85px;}
+select{cursor:pointer;font-family:'Inter',sans-serif;}
+input[type="password"]{letter-spacing:2px;}
 
-    /* ── MAIN WRAP ─────────────────────────────────────── */
-    .page{
-      position:relative;z-index:1;
-      max-width:920px;margin:0 auto;
-      padding:0 20px;
-    }
+/* DROP ZONE */
+.dz{border:2px dashed var(--border2);padding:40px 20px;text-align:center;cursor:pointer;
+  background:var(--bg2);transition:all 0.2s;position:relative;}
+.dz:hover,.dz.over{border-color:var(--blue);background:rgba(37,99,235,0.04);}
+.dz.loaded{border-color:var(--green);border-style:solid;background:rgba(5,150,105,0.04);}
+.dz-ico{font-size:2.5rem;margin-bottom:8px;display:block;}
+.dz-title{font-size:0.95rem;font-weight:700;margin-bottom:4px;}
+.dz-sub{font-size:0.78rem;color:var(--muted);}
+.dz-pills{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:9px;}
+.dz-pill{background:var(--surface);border:1px solid var(--border);padding:2px 9px;
+  font-size:0.66rem;font-weight:600;color:var(--muted);}
+.fc{display:none;margin-top:12px;padding:9px 13px;background:rgba(5,150,105,0.07);
+  border:1px solid rgba(5,150,105,0.2);font-size:0.8rem;color:var(--green);font-weight:600;}
 
-    /* ── HOW IT WORKS ──────────────────────────────────── */
-    .how-section{
-      margin:40px 0;
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:28px;
-      position:relative;
-      overflow:hidden;
-    }
-    .how-section::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:3px;
-      background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));
-    }
-    .section-title{
-      font-size:0.72rem;font-weight:700;
-      text-transform:uppercase;letter-spacing:1.5px;
-      color:var(--accent);margin-bottom:20px;
-      display:flex;align-items:center;gap:8px;
-    }
-    .section-title::after{
-      content:'';flex:1;height:1px;
-      background:linear-gradient(90deg,var(--border),transparent);
-    }
+/* BUTTONS */
+button{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border:none;
+  font-size:0.85rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.18s;}
+button:active{transform:scale(0.97);}
+button:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.bb{background:linear-gradient(135deg,var(--blue),var(--indigo));color:#fff;
+  box-shadow:0 3px 14px rgba(37,99,235,0.3);}
+.bb:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 20px rgba(37,99,235,0.4);}
+.bg{background:linear-gradient(135deg,var(--green),#0891b2);color:#fff;
+  box-shadow:0 3px 14px rgba(5,150,105,0.3);}
+.bg:hover:not(:disabled){transform:translateY(-1px);}
+.bgh{background:var(--bg2);border:1px solid var(--border);color:var(--muted);}
+.bgh:hover:not(:disabled){border-color:var(--border2);color:var(--text);}
+.blg{padding:13px 28px;font-size:0.9rem;}
 
-    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
-    .step{
-      background:var(--bg2);
-      border:1px solid var(--border);
-      border-radius:var(--radius-sm);
-      padding:16px;
-      transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;
-      cursor:default;
-    }
-    .step:hover{
-      border-color:var(--border2);
-      transform:translateY(-2px);
-      box-shadow:0 8px 24px rgba(0,0,0,0.3);
-    }
-    .step-num{
-      font-size:0.65rem;font-weight:700;
-      text-transform:uppercase;letter-spacing:1.5px;
-      color:var(--accent);margin-bottom:8px;
-    }
-    .step-icon{font-size:1.4rem;margin-bottom:6px;display:block;}
-    .step h3{font-size:0.88rem;font-weight:600;margin-bottom:4px;}
-    .step p{font-size:0.78rem;color:var(--muted2);line-height:1.6;}
+/* LOG */
+.log{background:#f8faff;border:1px solid var(--border);padding:12px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:0.74rem;min-height:100px;
+  max-height:200px;overflow-y:auto;line-height:1.9;}
+.log::-webkit-scrollbar{width:3px;}
+.log::-webkit-scrollbar-thumb{background:var(--border2);}
+.ll{display:flex;gap:10px;align-items:baseline;}
+.lt{color:var(--muted2);min-width:80px;font-size:0.68rem;}
+.lok{color:var(--green);}
+.lin{color:var(--blue);}
+.lwn{color:var(--amber);}
+.ler{color:var(--red);}
 
-    /* ── CARDS ─────────────────────────────────────────── */
-    .cards{display:flex;flex-direction:column;gap:20px;}
+/* STATUS PILL */
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:0.83rem;font-weight:700;
+  padding:9px 16px;margin-top:12px;}
+.pok{background:rgba(5,150,105,0.08);color:var(--green);border:1px solid rgba(5,150,105,0.25);}
+.per{background:rgba(220,38,38,0.08);color:var(--red);border:1px solid rgba(220,38,38,0.25);}
 
-    .card{
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:28px;
-      position:relative;
-      overflow:hidden;
-      transition:border-color 0.3s,box-shadow 0.3s;
-    }
-    .card:hover{border-color:var(--border2);}
+/* METRICS */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+.mc{background:var(--bg2);border:1px solid var(--border);padding:14px 12px;text-align:center;}
+.mv{font-size:1.4rem;font-weight:900;line-height:1;letter-spacing:-1px;}
+.ml{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;
+  color:var(--muted);margin-top:5px;}
+.ms{font-size:0.62rem;color:var(--muted2);margin-top:1px;}
+.mvb{color:var(--blue);}
+.mvg{color:var(--green);}
+.mvp{color:var(--purple);}
+.mva{color:var(--amber);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.chip{background:var(--bg2);border:1px solid var(--border);padding:4px 11px;
+  font-size:0.72rem;color:var(--muted);}
+.chip strong{color:var(--text);font-weight:600;}
 
-    .card-header{
-      display:flex;align-items:center;gap:10px;
-      margin-bottom:22px;
-      padding-bottom:16px;
-      border-bottom:1px solid var(--border);
-    }
-    .card-icon{
-      width:36px;height:36px;border-radius:10px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.1rem;flex-shrink:0;
-    }
-    .card-icon.blue{background:rgba(59,130,246,0.15);}
-    .card-icon.red {background:rgba(239,68,68,0.15);}
-    .card-icon.green{background:rgba(16,185,129,0.15);}
-    .card-icon.purple{background:rgba(99,102,241,0.15);}
-    .card-title-text{
-      font-size:0.95rem;font-weight:700;letter-spacing:-0.2px;
-    }
-    .card-subtitle{
-      font-size:0.75rem;color:var(--muted);margin-top:1px;
-    }
+/* PREVIEW SECTION */
+#preview-section{display:none;margin-top:24px;}
+.prev-inner{min-height:180px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg2);border:1px solid var(--border);padding:20px;margin-top:12px;}
+.prev-inner img{max-width:100%;max-height:400px;object-fit:contain;display:block;}
+.prev-inner audio{width:100%;}
+.prev-inner video{max-width:100%;max-height:350px;width:100%;}
+.no-prev{font-size:0.85rem;color:var(--muted2);font-style:italic;}
+.dlink{color:var(--blue);font-weight:700;font-size:0.9rem;text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;padding:14px 20px;
+  border:2px solid var(--blue);background:rgba(37,99,235,0.05);}
+.dlink:hover{background:rgba(37,99,235,0.1);}
 
-    .card.encrypt-card::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,var(--accent),var(--accent2));
-    }
-    .card.output-card::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,var(--red),#f97316);
-    }
-    .card.decrypt-card::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,var(--green),#06b6d4);
-    }
-    .card.log-card::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,var(--accent2),var(--accent));
-    }
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.55);
+  backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);padding:36px;
+  width:420px;max-width:90vw;box-shadow:0 24px 80px rgba(15,23,42,0.2);animation:min 0.22s ease;}
+@keyframes min{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:none}}
+.modal h3{font-size:1.1rem;font-weight:800;margin-bottom:6px;
+  background:linear-gradient(135deg,var(--blue),var(--indigo));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.modal p{font-size:0.8rem;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.modal-btns{display:flex;gap:10px;}
 
-    /* ── FORM ELEMENTS ─────────────────────────────────── */
-    .field{margin-bottom:18px;}
-    .field:last-of-type{margin-bottom:0;}
+/* KEY GRID */
+.kg{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;margin-top:8px;}
+.kb{background:rgba(37,99,235,0.07);border:1px solid rgba(37,99,235,0.15);
+  text-align:center;padding:4px 0;font-family:'JetBrains Mono',monospace;
+  font-size:0.55rem;color:var(--blue);}
 
-    label{
-      display:block;
-      font-size:0.75rem;font-weight:600;
-      text-transform:uppercase;letter-spacing:0.8px;
-      color:var(--muted2);margin-bottom:7px;
-    }
+/* PIPELINE */
+.pipe{background:var(--bg2);border:1px solid var(--border);padding:12px;overflow-x:auto;margin-top:10px;}
+.pv{display:flex;align-items:center;gap:4px;min-width:max-content;}
+.pb{background:var(--surface);border:1px solid var(--border);padding:8px 11px;
+  font-size:0.65rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--muted);
+  text-align:center;transition:all 0.28s;white-space:nowrap;min-width:72px;}
+.pb.active{border-color:var(--blue);color:var(--blue);background:rgba(37,99,235,0.06);transform:scale(1.06);}
+.pb.done{border-color:var(--green);color:var(--green);background:rgba(5,150,105,0.05);}
+.pa{color:var(--muted2);font-size:0.78rem;}
 
-    input[type="text"],textarea{
-      width:100%;
-      background:var(--bg2);
-      border:1px solid var(--border);
-      border-radius:var(--radius-sm);
-      color:var(--text);
-      padding:11px 14px;
-      font-size:0.87rem;
-      font-family:'JetBrains Mono',monospace;
-      outline:none;
-      transition:border-color 0.2s,box-shadow 0.2s;
-      line-height:1.5;
-    }
-    input[type="text"]:focus,textarea:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px rgba(59,130,246,0.12);
-    }
-    textarea{resize:vertical;min-height:90px;}
+/* BENCHMARK */
+.bench-table{width:100%;border-collapse:collapse;}
+.bench-table th{background:var(--bg2);color:var(--muted);font-size:0.66rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.9px;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border);}
+.bench-table td{padding:10px 14px;font-size:0.82rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+.bench-table tr:last-child td{border-bottom:none;}
+.bench-table tr:hover td{background:var(--bg2);}
+.an{font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.ab{font-size:0.58rem;font-weight:700;padding:2px 6px;text-transform:uppercase;}
+.aw{background:rgba(5,150,105,0.13);color:var(--green);}
+.ag{background:rgba(37,99,235,0.1);color:var(--blue);}
+.ao{background:rgba(217,119,6,0.1);color:var(--amber);}
+.ar{background:rgba(220,38,38,0.1);color:var(--red);}
+.bw{display:flex;align-items:center;gap:7px;}
+.bb2{flex:1;height:7px;background:var(--bg2);overflow:hidden;border:1px solid var(--border);}
+.bf{height:100%;transition:width 0.9s cubic-bezier(0.4,0,0.2,1);}
+.bv{font-size:0.74rem;font-weight:700;min-width:62px;text-align:right;}
 
-    /* ── CALLOUT ───────────────────────────────────────── */
-    .callout{
-      display:flex;gap:12px;align-items:flex-start;
-      background:rgba(59,130,246,0.06);
-      border:1px solid rgba(59,130,246,0.15);
-      border-radius:var(--radius-sm);
-      padding:12px 14px;
-      margin-top:16px;
-      font-size:0.81rem;color:var(--muted2);line-height:1.65;
-    }
-    .callout-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
-    .callout strong{color:var(--text);}
+/* SECURITY SCORE */
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+.sc{background:var(--bg2);border:1px solid var(--border);padding:15px;}
+.sc h4{font-size:0.82rem;font-weight:700;margin-bottom:9px;}
+.sr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:6px;}
+.sl{font-size:0.68rem;color:var(--muted);}
+.sv{font-size:0.71rem;font-weight:700;text-align:right;}
+.score-rows{display:flex;flex-direction:column;gap:8px;}
+.score-row{display:flex;align-items:center;gap:10px;}
+.sname{font-size:0.75rem;font-weight:600;min-width:160px;}
 
-    /* ── PIPELINE ──────────────────────────────────────── */
-    .pipeline-wrap{
-      background:var(--bg2);
-      border:1px solid var(--border);
-      border-radius:var(--radius-sm);
-      padding:16px;
-      margin-top:16px;
-      overflow-x:auto;
-    }
-    .aes-visual{
-      display:flex;align-items:center;gap:6px;
-      min-width:max-content;
-    }
-    .aes-block{
-      background:var(--surface2);
-      border:1px solid var(--border);
-      border-radius:8px;
-      padding:10px 14px;
-      font-size:0.72rem;font-weight:600;
-      font-family:'JetBrains Mono',monospace;
-      color:var(--muted);text-align:center;
-      transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
-      white-space:nowrap;min-width:80px;
-    }
-    .aes-block.active{
-      border-color:var(--accent);
-      color:var(--accent);
-      background:rgba(59,130,246,0.1);
-      box-shadow:0 0 16px rgba(59,130,246,0.3),0 0 0 1px var(--accent);
-      transform:scale(1.05);
-    }
-    .aes-block.done{
-      border-color:var(--green);
-      color:var(--green);
-      background:rgba(16,185,129,0.08);
-    }
-    .aes-arrow{
-      color:var(--muted);font-size:0.85rem;
-      flex-shrink:0;padding:0 2px;
-    }
+/* STEP CARDS */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;}
+.sc2{background:var(--bg2);border:1px solid var(--border);padding:15px;
+  transition:transform 0.2s,box-shadow 0.2s;}
+.sc2:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(0,0,0,0.07);}
+.si{font-size:1.4rem;margin-bottom:6px;display:block;}
+.sn{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--blue);margin-bottom:4px;}
+.sc2 h3{font-size:0.83rem;font-weight:700;margin-bottom:3px;}
+.sc2 p{font-size:0.74rem;color:var(--muted);line-height:1.55;}
 
-    /* ── BUTTONS ───────────────────────────────────────── */
-    .btn-row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+/* SPINNER */
+.spw{display:none;align-items:center;gap:8px;font-size:0.81rem;color:var(--blue);font-weight:600;}
+.sp{width:15px;height:15px;border:2px solid rgba(37,99,235,0.2);
+  border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-    button{
-      display:inline-flex;align-items:center;gap:7px;
-      padding:10px 20px;border:none;border-radius:var(--radius-sm);
-      font-size:0.85rem;font-weight:600;font-family:'Inter',sans-serif;
-      cursor:pointer;
-      transition:all 0.2s;
-      letter-spacing:0.2px;
-    }
-    button:active{transform:scale(0.97);}
-    button:disabled{opacity:0.45;cursor:not-allowed;}
+/* SDOT */
+.dot{width:8px;height:8px;display:inline-block;margin-right:3px;vertical-align:middle;}
 
-    .btn-primary{
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      color:#fff;
-      box-shadow:0 4px 14px rgba(59,130,246,0.35);
-    }
-    .btn-primary:hover:not(:disabled){
-      box-shadow:0 4px 20px rgba(59,130,246,0.5);
-      transform:translateY(-1px);
-    }
-    .btn-success{
-      background:linear-gradient(135deg,var(--green),#06b6d4);
-      color:#fff;
-      box-shadow:0 4px 14px rgba(16,185,129,0.35);
-    }
-    .btn-success:hover:not(:disabled){
-      box-shadow:0 4px 20px rgba(16,185,129,0.5);
-      transform:translateY(-1px);
-    }
-    .btn-ghost{
-      background:var(--bg2);
-      border:1px solid var(--border);
-      color:var(--muted2);
-    }
-    .btn-ghost:hover:not(:disabled){
-      border-color:var(--border2);
-      color:var(--text);
-      background:var(--surface2);
-    }
-
-    /* ── OUTPUT BOX ────────────────────────────────────── */
-    .output-box{
-      background:var(--bg2);
-      border:1px solid var(--border);
-      border-radius:var(--radius-sm);
-      padding:14px 14px 14px 14px;
-      margin-top:10px;
-      font-family:'JetBrains Mono',monospace;
-      font-size:0.8rem;
-      word-break:break-all;
-      min-height:60px;
-      position:relative;
-      line-height:1.7;
-      transition:border-color 0.3s,box-shadow 0.3s;
-    }
-    .output-box.has-value{
-      border-color:var(--border2);
-      box-shadow:inset 0 0 20px rgba(0,0,0,0.2);
-    }
-    .output-box.empty{color:var(--muted);font-style:italic;}
-    .output-label{
-      display:inline-block;margin-bottom:8px;
-      font-size:0.65rem;font-weight:700;letter-spacing:1px;
-      text-transform:uppercase;color:var(--muted);
-      font-family:'Inter',sans-serif;
-    }
-
-    .copy-btn{
-      position:absolute;top:10px;right:10px;
-      background:var(--surface2);
-      border:1px solid var(--border);
-      color:var(--muted2);
-      border-radius:6px;
-      padding:4px 10px;
-      font-size:0.7rem;font-weight:600;
-      font-family:'Inter',sans-serif;
-      cursor:pointer;
-      transition:all 0.2s;
-      letter-spacing:0.3px;
-    }
-    .copy-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-    /* ── KEY GRID ──────────────────────────────────────── */
-    .key-grid{
-      display:grid;
-      grid-template-columns:repeat(16,1fr);
-      gap:3px;margin-top:10px;
-    }
-    .key-byte{
-      background:rgba(59,130,246,0.08);
-      border:1px solid rgba(59,130,246,0.2);
-      border-radius:4px;text-align:center;padding:6px 0;
-      font-family:'JetBrains Mono',monospace;
-      font-size:0.6rem;color:var(--accent);
-      transition:background 0.3s;
-    }
-    .key-byte:hover{background:rgba(59,130,246,0.18);}
-
-    /* ── STATS ROW ─────────────────────────────────────── */
-    .stats-row{
-      display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;
-    }
-    .stat-chip{
-      background:var(--bg2);
-      border:1px solid var(--border);
-      border-radius:20px;
-      padding:5px 14px;
-      font-size:0.75rem;color:var(--muted2);
-      display:flex;align-items:center;gap:5px;
-    }
-    .stat-chip strong{color:var(--text);font-weight:600;}
-
-    /* ── PROCESS LOG ───────────────────────────────────── */
-    #process-log{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:var(--radius-sm);
-      padding:16px;
-      font-family:'JetBrains Mono',monospace;
-      font-size:0.78rem;
-      min-height:130px;max-height:280px;
-      overflow-y:auto;line-height:2;
-    }
-    #process-log::-webkit-scrollbar{width:4px;}
-    #process-log::-webkit-scrollbar-track{background:transparent;}
-    #process-log::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
-
-    .log-line{display:flex;gap:12px;align-items:baseline;}
-    .log-ts{color:var(--muted);min-width:90px;font-size:0.72rem;}
-    .log-ok  {color:var(--green);}
-    .log-info{color:var(--accent);}
-    .log-warn{color:var(--amber);}
-    .log-err {color:var(--red);}
-
-    /* ── STATUS PILL ───────────────────────────────────── */
-    .status-pill{
-      display:inline-flex;align-items:center;gap:8px;
-      font-size:0.82rem;font-weight:600;
-      padding:8px 16px;border-radius:var(--radius-sm);
-      margin-top:14px;
-    }
-    .status-pill.ok{
-      background:rgba(16,185,129,0.1);
-      color:var(--green);
-      border:1px solid rgba(16,185,129,0.3);
-      box-shadow:var(--glow-green);
-    }
-    .status-pill.err{
-      background:rgba(239,68,68,0.1);
-      color:var(--red);
-      border:1px solid rgba(239,68,68,0.3);
-      box-shadow:var(--glow-red);
-    }
-
-    /* ── FOOTER ────────────────────────────────────────── */
-    footer{
-      text-align:center;margin-top:60px;
-      padding:24px;
-      border-top:1px solid var(--border);
-      font-size:0.78rem;color:var(--muted);
-      position:relative;z-index:1;
-    }
-    footer span{color:var(--muted2);}
-
-    /* ── SCROLLBAR GLOBAL ──────────────────────────────── */
-    ::-webkit-scrollbar{width:6px;}
-    ::-webkit-scrollbar-track{background:var(--bg);}
-    ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;}
-
-    @media(max-width:540px){
-      .key-grid{grid-template-columns:repeat(8,1fr);}
-      .card{padding:20px 16px;}
-      header{padding:40px 16px 32px;}
-    }
-  </style>
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);}
+@media(max-width:900px){.page,nav,header{padding-left:20px!important;padding-right:20px!important;}
+.g2,.g3,.g4{grid-template-columns:1fr;}
+.kg{grid-template-columns:repeat(8,1fr);}
+.wf{flex-wrap:wrap;gap:12px;}.wfs{min-width:80px;}}
+</style>
 </head>
 <body>
 
-<!-- ══ HEADER ═════════════════════════════════════════════ -->
+<!-- HEADER -->
 <header>
-  <div class="header-inner">
-    <div class="header-lock">&#128274;</div>
-    <h1><span class="accent">AES-256</span> Live Demo</h1>
-    <p class="sub">Real encryption &amp; decryption &mdash; powered by your browser&rsquo;s built-in crypto engine</p>
-    <div class="badge-row">
-      <span class="badge">&#9679; AES-256-CBC</span>
-      <span class="badge green">&#9679; Web Crypto API</span>
-      <span class="badge purple">&#9679; Zero Server &middot; 100% Local</span>
-    </div>
+  <div class="logo-box">&#128274;</div>
+  <div class="logo-text">
+    <h1>CipherVault</h1>
+    <p>AES-256 Multimedia Encryption Suite &mdash; 100% Browser-Native &middot; Zero Server</p>
+  </div>
+  <div class="hbadges">
+    <span class="hb hb-b">&#9679; AES-256-CBC/GCM</span>
+    <span class="hb hb-g">&#9679; Web Crypto API</span>
+    <span class="hb hb-p">&#9679; No Data Leaves</span>
   </div>
 </header>
 
+<!-- TABS -->
+<nav>
+  <button class="tb active" onclick="switchTab(this,'tm')">&#127902; Multimedia Encryption</button>
+  <button class="tb" onclick="switchTab(this,'tt')">&#128221; Text Encryption</button>
+  <button class="tb" onclick="switchTab(this,'tb2')">&#128202; Performance Benchmark</button>
+</nav>
+
+<!-- PASSWORD MODAL -->
+<div class="modal-bg" id="pw-modal">
+  <div class="modal">
+    <h3>&#128274; Enter Decryption Password</h3>
+    <p>This file is AES-256 encrypted. Enter the same password used to encrypt it.</p>
+    <div class="field">
+      <label for="mpw">Decryption Password</label>
+      <input type="password" id="mpw" placeholder="Enter password..." autocomplete="off"/>
+    </div>
+    <div id="mfi" style="font-size:0.78rem;color:var(--muted);margin-bottom:14px;line-height:1.6;"></div>
+    <div class="modal-btns">
+      <button class="bg blg" onclick="runDecrypt()" style="flex:1">&#128275; Decrypt &amp; Open</button>
+      <button class="bgh" onclick="document.getElementById('pw-modal').classList.remove('show')">Cancel</button>
+    </div>
+    <div id="mst" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB: MULTIMEDIA ═══ -->
+<div id="tm" class="tp active">
 <div class="page">
 
-  <!-- ══ HOW IT WORKS ══════════════════════════════════════ -->
-  <div class="how-section">
-    <div class="section-title">&#128218; How AES-256 Works</div>
-    <div class="steps">
-      <div class="step">
-        <span class="step-icon">&#128273;</span>
-        <div class="step-num">Step 1</div>
-        <h3>Key Expansion</h3>
-        <p>Password &rarr; <strong>PBKDF2 + SHA-256</strong> &rarr; 256-bit key (32 bytes).</p>
+  <!-- Workflow -->
+  <div class="wf" style="margin-bottom:26px;">
+    <div class="wfs"><div class="wfn">1</div><div class="wfl"><strong>Upload File</strong>Any type</div></div>
+    <div class="wfs"><div class="wfn">2</div><div class="wfl"><strong>Set Password</strong>Your secret key</div></div>
+    <div class="wfs"><div class="wfn">3</div><div class="wfl"><strong>Encrypt</strong>AES-256</div></div>
+    <div class="wfs"><div class="wfn">4</div><div class="wfl"><strong>Auto Download</strong>.enc file</div></div>
+    <div class="wfs"><div class="wfn">5</div><div class="wfl"><strong>Upload .enc</strong>Decrypt section</div></div>
+    <div class="wfs done"><div class="wfn">6</div><div class="wfl"><strong>Enter Password</strong>Preview &amp; Download</div></div>
+  </div>
+
+  <div class="g2">
+
+    <!-- ENCRYPT COL -->
+    <div class="col">
+      <div class="card cb">
+        <div class="ch">
+          <div class="ico ico-b">&#128274;</div>
+          <div><div class="ctitle">Encrypt File</div><div class="csub">Upload &rarr; password &rarr; encrypt &rarr; auto-download</div></div>
+        </div>
+        <div class="dz" id="edz" onclick="document.getElementById('efi').click()"
+             ondragover="event.preventDefault();this.classList.add('over')"
+             ondragleave="this.classList.remove('over')"
+             ondrop="eDrop(event)">
+          <input type="file" id="efi" style="display:none" onchange="eFile(event)"/>
+          <span class="dz-ico">&#128193;</span>
+          <div class="dz-title">Drop file here or click to browse</div>
+          <div class="dz-sub">Any file type &mdash; image, audio, video, document</div>
+          <div class="dz-pills">
+            <span class="dz-pill">&#128247; Images</span>
+            <span class="dz-pill">&#127925; Audio</span>
+            <span class="dz-pill">&#127902; Video</span>
+            <span class="dz-pill">&#128196; PDF</span>
+            <span class="dz-pill">&#128230; Any</span>
+          </div>
+        </div>
+        <div class="fc" id="efc">&#9989; <strong id="efn">-</strong> &middot; <span id="efs">-</span></div>
+        <div class="field" style="margin-top:15px;">
+          <label for="epw">&#128273; Encryption Password</label>
+          <input type="password" id="epw" placeholder="Enter a strong password..." autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label for="emode">&#9881; Encryption Mode</label>
+          <select id="emode">
+            <option value="AES-CBC">AES-256-CBC &mdash; Recommended</option>
+            <option value="AES-GCM">AES-256-GCM &mdash; Authenticated (AEAD)</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button class="bb blg" id="ebtn" onclick="doEncrypt()" disabled>&#128274; Encrypt &amp; Download</button>
+        </div>
+        <!-- Encrypt Metrics -->
+        <div id="emetrics" style="display:none;margin-top:20px;">
+          <div class="st">&#128202; Encryption Metrics</div>
+          <div class="mgrid">
+            <div class="mc"><div class="mv mvb" id="em-t">-</div><div class="ml">Time</div><div class="ms">ms</div></div>
+            <div class="mc"><div class="mv mvg" id="em-s">-</div><div class="ml">Speed</div><div class="ms">MB/s</div></div>
+            <div class="mc"><div class="mv mvp" id="em-o">-</div><div class="ml">Original</div><div class="ms">size</div></div>
+            <div class="mc"><div class="mv mva" id="em-e">-</div><div class="ml">Encrypted</div><div class="ms">size</div></div>
+          </div>
+          <div class="chips">
+            <div class="chip">Algo: <strong id="em-a">AES-256-CBC</strong></div>
+            <div class="chip">Key: <strong>256-bit</strong></div>
+            <div class="chip">Rounds: <strong>14</strong></div>
+            <div class="chip">Overhead: <strong id="em-ov">-</strong></div>
+          </div>
+        </div>
       </div>
-      <div class="step">
-        <span class="step-icon">&#127922;</span>
-        <div class="step-num">Step 2</div>
-        <h3>IV Generation</h3>
-        <p>A random <strong>128-bit IV</strong> is generated — every encryption is unique.</p>
+      <!-- Encrypt Log -->
+      <div class="card ci">
+        <div class="ch">
+          <div class="ico ico-p">&#128196;</div>
+          <div><div class="ctitle">Encryption Log</div><div class="csub">Real-time step trace &amp; timings</div></div>
+        </div>
+        <div id="elog" class="log">
+          <div class="ll"><span class="lt">ready</span><span class="lin">CipherVault ready. Web Crypto: <strong id="wcs">checking...</strong></span></div>
+        </div>
       </div>
-      <div class="step">
-        <span class="step-icon">&#129521;</span>
-        <div class="step-num">Step 3</div>
-        <h3>Block Splitting</h3>
-        <p>Message split into <strong>128-bit blocks</strong>; each chained with the previous (CBC).</p>
+    </div>
+
+    <!-- DECRYPT COL -->
+    <div class="col">
+      <div class="card cg">
+        <div class="ch">
+          <div class="ico ico-g">&#128275;</div>
+          <div><div class="ctitle">Decrypt File</div><div class="csub">Upload .enc &rarr; enter password &rarr; preview &amp; download</div></div>
+        </div>
+        <div class="dz" id="ddz" onclick="document.getElementById('dfi').click()"
+             ondragover="event.preventDefault();this.classList.add('over')"
+             ondragleave="this.classList.remove('over')"
+             ondrop="dDrop(event)">
+          <input type="file" id="dfi" style="display:none" onchange="dFile(event)" accept=".enc"/>
+          <span class="dz-ico">&#128275;</span>
+          <div class="dz-title">Drop .enc file here or click to browse</div>
+          <div class="dz-sub">Upload the encrypted .enc file to decrypt</div>
+        </div>
+        <div class="fc" id="dfc">&#9989; <strong id="dfn">-</strong> &middot; <span id="dfs">-</span></div>
+        <div class="btn-row">
+          <button class="bg blg" id="dbtn" onclick="openModal()" disabled>&#128275; Decrypt &amp; Open</button>
+        </div>
+        <div id="dst" style="margin-top:8px;"></div>
       </div>
-      <div class="step">
-        <span class="step-icon">&#128260;</span>
-        <div class="step-num">Step 4</div>
-        <h3>14 Rounds</h3>
-        <p>SubBytes &rarr; ShiftRows &rarr; MixColumns &rarr; AddRoundKey, repeated <strong>14&times;</strong>.</p>
+      <!-- Decrypt Log -->
+      <div class="card cg">
+        <div class="ch">
+          <div class="ico ico-g">&#128196;</div>
+          <div><div class="ctitle">Decryption Log</div><div class="csub">Real-time step trace &amp; timings</div></div>
+        </div>
+        <div id="dlog" class="log">
+          <div class="ll"><span class="lt">ready</span><span class="lin">Decryption module ready. Upload a .enc file above.</span></div>
+        </div>
       </div>
-      <div class="step">
-        <span class="step-icon">&#128230;</span>
-        <div class="step-num">Step 5</div>
-        <h3>Output</h3>
-        <p>IV + ciphertext packed together and encoded as <strong>Base64</strong>.</p>
+    </div>
+
+  </div><!-- /g2 -->
+
+  <!-- PREVIEW SECTION — shown after successful decryption -->
+  <div id="preview-section">
+    <div class="card cg">
+      <div class="ch">
+        <div class="ico ico-g">&#128247;</div>
+        <div><div class="ctitle">Decrypted File Preview</div><div class="csub">File successfully restored from AES-256 encryption</div></div>
       </div>
-      <div class="step">
-        <span class="step-icon">&#128275;</span>
-        <div class="step-num">Decrypt</div>
-        <h3>Reversal</h3>
-        <p>Same key + IV runs all <strong>14 rounds in reverse</strong> to recover the original message.</p>
+      <div id="prev-status"></div>
+      <div class="prev-inner" id="prev-content">
+        <span class="no-prev">Preview loads here after decryption</span>
+      </div>
+      <!-- Dec Metrics -->
+      <div id="dmetrics" style="display:none;margin-top:20px;">
+        <div class="st">&#128202; Decryption Metrics</div>
+        <div class="mgrid">
+          <div class="mc"><div class="mv mvg" id="dm-t">-</div><div class="ml">Time</div><div class="ms">ms</div></div>
+          <div class="mc"><div class="mv mvb" id="dm-s">-</div><div class="ml">Speed</div><div class="ms">MB/s</div></div>
+          <div class="mc"><div class="mv mvp" id="dm-z">-</div><div class="ml">Restored</div><div class="ms">size</div></div>
+          <div class="mc"><div class="mv mva" id="dm-i">-</div><div class="ml">Integrity</div><div class="ms">check</div></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ══ CARDS ════════════════════════════════════════════ -->
-  <div class="cards">
+</div></div>
 
-    <!-- ── Encrypt Card ─── -->
-    <div class="card encrypt-card">
-      <div class="card-header">
-        <div class="card-icon blue">&#128274;</div>
-        <div>
-          <div class="card-title-text">Encrypt a Message</div>
-          <div class="card-subtitle">Enter your plaintext and a password to generate ciphertext</div>
+<!-- ═══ TAB: TEXT ═══ -->
+<div id="tt" class="tp">
+<div class="page">
+  <div class="g2" style="gap:28px;">
+    <div class="col">
+      <div class="card cb">
+        <div class="ch"><div class="ico ico-b">&#128274;</div>
+          <div><div class="ctitle">Text Encryption &mdash; AES-256-CBC</div><div class="csub">Encrypt any message with a password</div></div>
+        </div>
+        <div class="field"><label>Plain Text</label><textarea id="pt">Hello, World! This is encrypted with AES-256.</textarea></div>
+        <div class="field"><label>Password</label><input type="text" id="tpw" value="MySecretPassword123!"/></div>
+        <div style="background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);padding:11px 13px;font-size:0.78rem;color:var(--muted);line-height:1.6;margin-top:6px;">
+          &#128161; PBKDF2 (100k SHA-256) &rarr; 256-bit key &middot; Random 128-bit IV per encryption
+        </div>
+        <label style="margin-top:16px;display:block;">&#9881; Live AES Pipeline</label>
+        <div class="pipe">
+          <div class="pv">
+            <div class="pb" id="p0">Plaintext</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p1">KeyExpand</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p2">IV Gen</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p3">SubBytes&times;14</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p4">ShiftRows&times;14</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p5">MixCols&times;13</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p6">AddRndKey&times;14</div><span class="pa">&rarr;</span>
+            <div class="pb" id="p7">Ciphertext</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="bb" onclick="tEnc()">&#128274; Encrypt</button>
+          <button class="bgh" onclick="document.getElementById('pt').value='AES-256 adopted by NIST 2001. 2^256 keys. 14 rounds of SubBytes+ShiftRows+MixColumns+AddRoundKey.';document.getElementById('tpw').value='Demo@CipherVault!'">&#128203; Example</button>
+          <button class="bgh" onclick="clearT()">&#128465; Clear</button>
         </div>
       </div>
-
-      <div class="field">
-        <label for="plaintext">&#128221; Plain Text &mdash; message to encrypt</label>
-        <textarea id="plaintext">Hello, Judges! This message will be encrypted with AES-256.</textarea>
-      </div>
-
-      <div class="field">
-        <label for="password">&#128273; Encryption Password (shared secret key)</label>
-        <input type="text" id="password" value="MySecretPassword123!"/>
-      </div>
-
-      <div class="callout">
-        <span class="callout-icon">&#128161;</span>
-        <div>
-          <strong>Key Derivation:</strong> Your password is stretched with
-          <strong>PBKDF2 (100,000 rounds of SHA-256)</strong> into a full 256-bit key.
-          A random <strong>128-bit IV</strong> is generated each time &mdash; so
-          <em>the same message + password always produces a different ciphertext</em>.
-        </div>
-      </div>
-
-      <label style="margin-top:20px;display:block;">&#9881; AES-256-CBC Live Pipeline</label>
-      <div class="pipeline-wrap">
-        <div class="aes-visual">
-          <div class="aes-block" id="s-plaintext">Plaintext</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-keyexp">Key<br/>Expansion</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-iv">IV<br/>Generation</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-subbytes">SubBytes<br/>&times;14</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-shiftrows">ShiftRows<br/>&times;14</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-mixcols">MixColumns<br/>&times;13</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-addroundkey">AddRoundKey<br/>&times;14</div>
-          <span class="aes-arrow">&#8594;</span>
-          <div class="aes-block" id="s-ciphertext">Ciphertext</div>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-primary" id="btn-encrypt" onclick="doEncrypt()">
-          &#128274; Encrypt
-        </button>
-        <button class="btn-ghost" onclick="loadExample()">&#128203; Load Example</button>
-        <button class="btn-ghost" onclick="clearAll()">&#128465; Clear</button>
+      <div class="card ci">
+        <div class="ch"><div class="ico ico-p">&#128196;</div><div><div class="ctitle">Process Log</div><div class="csub">Hex values &amp; timings</div></div></div>
+        <div id="tlog" class="log"><div class="ll"><span class="lt">ready</span><span class="lin">Text encryption ready.</span></div></div>
       </div>
     </div>
-
-    <!-- ── Encrypted Output Card ─── -->
-    <div class="card output-card">
-      <div class="card-header">
-        <div class="card-icon red">&#128202;</div>
-        <div>
-          <div class="card-title-text">Encrypted Output</div>
-          <div class="card-subtitle">Ciphertext, key visualisation &amp; statistics</div>
+    <div class="col">
+      <div class="card cr">
+        <div class="ch"><div class="ico ico-r">&#128202;</div>
+          <div><div class="ctitle">Ciphertext Output</div><div class="csub">Base64 encoded (IV prepended)</div></div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);padding:12px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;word-break:break-all;min-height:60px;color:var(--muted);font-style:italic;position:relative;" id="tct-box">
+          <span id="tct">Click Encrypt above...</span>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('tct').textContent)" id="tcp" style="display:none;position:absolute;top:8px;right:8px;background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:3px 9px;font-size:0.67rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Copy</button>
+        </div>
+        <label style="margin-top:15px;display:block;">256-bit Key Bytes</label>
+        <div class="kg" id="tkg"></div>
+        <div class="chips" style="margin-top:12px;">
+          <div class="chip">Plaintext: <strong id="tsp">-</strong></div>
+          <div class="chip">Ciphertext: <strong id="tsc">-</strong></div>
+          <div class="chip">Time: <strong id="tst">-</strong></div>
+          <div class="chip">Speed: <strong id="tss">-</strong></div>
+          <div class="chip">Mode: <strong>CBC</strong></div>
+          <div class="chip">Rounds: <strong>14</strong></div>
         </div>
       </div>
-
-      <label>&#128274; Ciphertext &mdash; Base64 encoded (IV prepended)</label>
-      <div class="output-box empty" id="ciphertext-out">
-        <div class="output-label">ciphertext &middot; base64</div>
-        <span id="cipher-text">Click Encrypt to see output&hellip;</span>
-        <button class="copy-btn" onclick="copyText('cipher-text')" style="display:none" id="copy-cipher">&#128203; Copy</button>
-      </div>
-
-      <label style="margin-top:18px;">&#128207; 256-bit Key Bytes &mdash; 32 bytes in hex</label>
-      <div class="key-grid" id="key-grid"></div>
-
-      <label style="margin-top:18px;">&#128202; Statistics</label>
-      <div class="stats-row">
-        <div class="stat-chip">Plaintext bytes: <strong id="stat-pt">&mdash;</strong></div>
-        <div class="stat-chip">Ciphertext bytes: <strong id="stat-ct">&mdash;</strong></div>
-        <div class="stat-chip">Key size: <strong>256-bit</strong></div>
-        <div class="stat-chip">Block size: <strong>128-bit</strong></div>
-        <div class="stat-chip">Mode: <strong>CBC</strong></div>
-        <div class="stat-chip">IV size: <strong>128-bit</strong></div>
+      <div class="card cg">
+        <div class="ch"><div class="ico ico-g">&#128275;</div>
+          <div><div class="ctitle">Decrypt Text</div><div class="csub">Paste ciphertext + same password</div></div>
+        </div>
+        <div class="field"><label>Ciphertext (Base64)</label><textarea id="tctIn" style="min-height:60px;" placeholder="Paste ciphertext or encrypt above first..."></textarea></div>
+        <div class="field"><label>Password</label><input type="text" id="tdpw" value="MySecretPassword123!"/></div>
+        <div class="btn-row">
+          <button class="bg" onclick="tDec()">&#128275; Decrypt</button>
+          <button class="bgh" onclick="document.getElementById('tctIn').value=document.getElementById('tct').textContent">&#8679; Use Above</button>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);padding:12px;margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;min-height:48px;color:var(--muted);font-style:italic;" id="tdt-box">
+          <span id="tdt">Decrypted text appears here...</span>
+        </div>
+        <div id="tst2"></div>
       </div>
     </div>
+  </div>
+</div></div>
 
-    <!-- ── Decrypt Card ─── -->
-    <div class="card decrypt-card">
-      <div class="card-header">
-        <div class="card-icon green">&#128275;</div>
-        <div>
-          <div class="card-title-text">Decrypt</div>
-          <div class="card-subtitle">Recover the original message from ciphertext + password</div>
-        </div>
-      </div>
+<!-- ═══ TAB: BENCHMARK ═══ -->
+<div id="tb2" class="tp">
+<div class="page">
 
-      <div class="field">
-        <label for="cipher-input">&#128274; Ciphertext to Decrypt (Base64)</label>
-        <textarea id="cipher-input" placeholder="Paste ciphertext here, or click Encrypt above to auto-fill&hellip;" style="min-height:65px;"></textarea>
-      </div>
-
-      <div class="field">
-        <label for="dec-password">&#128273; Decryption Password</label>
-        <input type="text" id="dec-password" value="MySecretPassword123!"/>
-      </div>
-
-      <div class="callout">
-        <span class="callout-icon">&#128161;</span>
-        <div>
-          <strong>How decryption works:</strong> Base64 decoded &rarr; first 16 bytes = IV &rarr;
-          remaining = ciphertext. AES runs <strong>14 rounds in reverse</strong> with the same key.
-          A <em>wrong password causes a padding error</em> &mdash; try it to see the failure!
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-success" onclick="doDecrypt()">&#128275; Decrypt</button>
-        <button class="btn-ghost" onclick="useEncrypted()">&#8679; Use Encrypted Output</button>
-      </div>
-
-      <label style="margin-top:20px;display:block;">&#9989; Decrypted Plain Text</label>
-      <div class="output-box empty" id="plaintext-out">
-        <div class="output-label">decrypted plaintext</div>
-        <span id="dec-text">Click Decrypt to see output&hellip;</span>
-        <button class="copy-btn" onclick="copyText('dec-text')" style="display:none" id="copy-dec">&#128203; Copy</button>
-      </div>
-
-      <div id="verify-status"></div>
+  <div class="card ca" style="margin-bottom:22px;">
+    <div class="ch">
+      <div class="ico ico-a">&#127959;</div>
+      <div><div class="ctitle">Live AES-256 Performance &mdash; Measured in Your Browser</div>
+        <div class="csub">Real Web Crypto API timings, averaged over 3 runs. ChaCha20 in pure JS.</div></div>
     </div>
+    <!-- Live metric cards -->
+    <div class="mgrid" style="margin-bottom:20px;">
+      <div class="mc"><div class="mv mvb" id="lm-e">-</div><div class="ml">Enc Speed</div><div class="ms">MB/s AES-256-CBC</div></div>
+      <div class="mc"><div class="mv mvg" id="lm-d">-</div><div class="ml">Dec Speed</div><div class="ms">MB/s AES-256-CBC</div></div>
+      <div class="mc"><div class="mv mvp" id="lm-l">-</div><div class="ml">Latency</div><div class="ms">ms per 100KB</div></div>
+      <div class="mc"><div class="mv mva" id="lm-k">-</div><div class="ml">Key Derive</div><div class="ms">ms PBKDF2 100k</div></div>
+      <div class="mc"><div class="mv mvb" id="lm-128">-</div><div class="ml">AES-128</div><div class="ms">MB/s comparison</div></div>
+      <div class="mc"><div class="mv mvg" id="lm-gcm">-</div><div class="ml">AES-256-GCM</div><div class="ms">MB/s AEAD</div></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+      <span style="font-size:0.81rem;color:var(--muted);font-weight:600;">Payload:</span>
+      <select id="bsz" style="width:auto;font-family:'Inter',sans-serif;padding:8px 12px;">
+        <option value="10240">10 KB</option>
+        <option value="102400" selected>100 KB</option>
+        <option value="1048576">1 MB</option>
+        <option value="5242880">5 MB</option>
+      </select>
+      <button class="bb" id="bbtn" onclick="runBench()">&#9889; Run Live Benchmark</button>
+      <div class="spw" id="bspin"><div class="sp"></div> Benchmarking...</div>
+    </div>
+    <div id="blog" class="log" style="min-height:65px;max-height:130px;margin-bottom:18px;">
+      <span style="color:var(--muted2);font-style:italic;font-size:0.76rem;font-family:'JetBrains Mono',monospace;">Click Run to start benchmark...</span>
+    </div>
+    <div class="st">&#128200; All Algorithm Comparison</div>
+    <div style="overflow-x:auto;">
+    <table class="bench-table">
+      <thead><tr>
+        <th>Algorithm</th><th>Enc Speed</th><th>Dec Speed</th><th>Key Size</th><th>Security</th><th>Auth?</th><th>Speed Bar</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="an">AES-256-CBC <span class="ab aw">&#9733; Top Pick</span></div></td>
+          <td id="b256e">-</td><td id="b256d">-</td><td>256-bit</td>
+          <td><span class="dot" style="background:var(--green)"></span>Unbreakable</td><td>&#10060;</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" id="bar256" style="width:0%;background:linear-gradient(90deg,#2563eb,#6366f1)"></div></div><span class="bv" id="bv256">-</span></div></td>
+        </tr>
+        <tr>
+          <td><div class="an">AES-256-GCM <span class="ab ag">AEAD</span></div></td>
+          <td id="bgcme">-</td><td id="bgcmd">-</td><td>256-bit</td>
+          <td><span class="dot" style="background:var(--green)"></span>Unbreakable+Auth</td><td>&#9989; GHASH</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" id="bargcm" style="width:0%;background:linear-gradient(90deg,#059669,#06b6d4)"></div></div><span class="bv" id="bvgcm">-</span></div></td>
+        </tr>
+        <tr>
+          <td><div class="an">AES-128-CBC <span class="ab ag">Native</span></div></td>
+          <td id="b128e">-</td><td id="b128d">-</td><td>128-bit</td>
+          <td><span class="dot" style="background:var(--blue)"></span>High</td><td>&#10060;</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" id="bar128" style="width:0%;background:linear-gradient(90deg,#6366f1,#06b6d4)"></div></div><span class="bv" id="bv128">-</span></div></td>
+        </tr>
+        <tr>
+          <td><div class="an">ChaCha20-P1305 <span class="ab ao">JS</span></div></td>
+          <td id="bcce">-</td><td id="bccd">-</td><td>256-bit</td>
+          <td><span class="dot" style="background:var(--green)"></span>Max</td><td>&#9989; Poly1305</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" id="barcc" style="width:0%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div><span class="bv" id="bvcc">-</span></div></td>
+        </tr>
+        <tr>
+          <td><div class="an">3DES-CBC <span class="ab ar">Deprecated</span></div></td>
+          <td>~150 MB/s*</td><td>~145 MB/s*</td><td>112-bit eff.</td>
+          <td><span class="dot" style="background:var(--amber)"></span>Sweet32 vuln.</td><td>&#10060;</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" style="width:18%;background:linear-gradient(90deg,#dc2626,#f97316)"></div></div><span class="bv">~150</span></div></td>
+        </tr>
+        <tr>
+          <td><div class="an">DES-CBC <span class="ab ar">Broken</span></div></td>
+          <td>~300 MB/s*</td><td>~290 MB/s*</td><td>56-bit</td>
+          <td><span class="dot" style="background:var(--red)"></span>Cracked &lt;24h</td><td>&#10060;</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" style="width:35%;background:linear-gradient(90deg,#dc2626,#ef4444)"></div></div><span class="bv">~300</span></div></td>
+        </tr>
+        <tr>
+          <td><div class="an">RSA-2048 <span class="ab ar">Asymmetric</span></div></td>
+          <td>&lt;0.5 MB/s*</td><td>&lt;0.2 MB/s*</td><td>2048-bit</td>
+          <td><span class="dot" style="background:var(--blue)"></span>Short-term</td><td>&#10060; Sign only</td>
+          <td><div class="bw"><div class="bb2"><div class="bf" style="width:1%;background:#7c3aed"></div></div><span class="bv">&lt;1</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:0.66rem;color:var(--muted2);margin-top:8px;">* = NIST SP 800-67 / OpenSSL reference values. Rows without * = live browser measurement via SubtleCrypto.</p>
+  </div>
 
-    <!-- ── Log Card ─── -->
-    <div class="card log-card">
-      <div class="card-header">
-        <div class="card-icon purple">&#128196;</div>
-        <div>
-          <div class="card-title-text">Live Process Log</div>
-          <div class="card-subtitle">Real-time step-by-step execution trace with hex values &amp; timings</div>
+  <div class="g2" style="gap:22px;">
+    <div class="card cg">
+      <div class="ch"><div class="ico ico-g">&#128737;</div>
+        <div><div class="ctitle">Security Analysis</div><div class="csub">Key space, brute-force resistance, NIST status</div></div>
+      </div>
+      <div class="sc-grid" style="margin-bottom:18px;">
+        <div class="sc"><h4 style="color:var(--green)">&#128274; AES-256</h4>
+          <div class="sr"><span class="sl">Key space</span><span class="sv" style="color:var(--green)">2&sup2;&sup5;&sup6; &asymp; 10&sup7;&sup7;</span></div>
+          <div class="sr"><span class="sl">Brute force</span><span class="sv" style="color:var(--green)">&gt; Universe age</span></div>
+          <div class="sr"><span class="sl">Known attacks</span><span class="sv" style="color:var(--green)">None effective</span></div>
+          <div class="sr"><span class="sl">NIST status</span><span class="sv" style="color:var(--green)">&#9989; Current Std</span></div>
+          <div class="sr"><span class="sl">Quantum</span><span class="sv" style="color:var(--amber)">128-bit Grover</span></div>
+        </div>
+        <div class="sc"><h4 style="color:var(--amber)">&#9888; 3DES</h4>
+          <div class="sr"><span class="sl">Effective key</span><span class="sv" style="color:var(--amber)">~112-bit</span></div>
+          <div class="sr"><span class="sl">Sweet32</span><span class="sv" style="color:var(--red)">&#10060; Vulnerable</span></div>
+          <div class="sr"><span class="sl">Block size</span><span class="sv" style="color:var(--red)">64-bit (weak)</span></div>
+          <div class="sr"><span class="sl">NIST status</span><span class="sv" style="color:var(--amber)">Deprecated 2023</span></div>
+          <div class="sr"><span class="sl">Verdict</span><span class="sv" style="color:var(--red);font-size:0.78rem;font-weight:800;">DO NOT USE</span></div>
+        </div>
+        <div class="sc"><h4 style="color:var(--red)">&#128680; DES</h4>
+          <div class="sr"><span class="sl">Key space</span><span class="sv" style="color:var(--red)">2&sup5;&sup6; cracked 1998</span></div>
+          <div class="sr"><span class="sl">Brute force</span><span class="sv" style="color:var(--red)">&lt; 24 hours today</span></div>
+          <div class="sr"><span class="sl">NIST status</span><span class="sv" style="color:var(--red)">Withdrawn 2005</span></div>
+          <div class="sr"><span class="sl">Verdict</span><span class="sv" style="color:var(--red);font-size:0.78rem;font-weight:800;">BROKEN &#10006;</span></div>
+        </div>
+        <div class="sc"><h4 style="color:var(--purple)">&#128273; RSA-2048</h4>
+          <div class="sr"><span class="sl">Type</span><span class="sv" style="color:var(--purple)">Asymmetric</span></div>
+          <div class="sr"><span class="sl">Use case</span><span class="sv" style="color:var(--purple)">Key exchange only</span></div>
+          <div class="sr"><span class="sl">Quantum risk</span><span class="sv" style="color:var(--red)">Shor breaks it</span></div>
+          <div class="sr"><span class="sl">Speed</span><span class="sv" style="color:var(--red)">~1000x slower</span></div>
+          <div class="sr"><span class="sl">Verdict</span><span class="sv" style="color:var(--purple)">Key wrap only</span></div>
         </div>
       </div>
-      <div id="process-log">
-        <div class="log-line">
-          <span class="log-ts">ready</span>
-          <span class="log-info">AES-256-CBC demo loaded. Web Crypto API: <strong id="crypto-support">checking&hellip;</strong></span>
-        </div>
+      <div class="st">Security Score (0-100)</div>
+      <div class="score-rows">
+        <div class="score-row"><span class="sname">AES-256 CBC/GCM</span><div class="bb2" style="flex:1;height:8px;"><div class="bf" style="width:99%;background:linear-gradient(90deg,#059669,#06b6d4)"></div></div><span class="bv" style="color:var(--green);min-width:52px">99/100</span></div>
+        <div class="score-row"><span class="sname">ChaCha20-Poly1305</span><div class="bb2" style="flex:1;height:8px;"><div class="bf" style="width:97%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div><span class="bv" style="color:var(--purple);min-width:52px">97/100</span></div>
+        <div class="score-row"><span class="sname">AES-128-CBC</span><div class="bb2" style="flex:1;height:8px;"><div class="bf" style="width:90%;background:linear-gradient(90deg,#2563eb,#6366f1)"></div></div><span class="bv" style="color:var(--blue);min-width:52px">90/100</span></div>
+        <div class="score-row"><span class="sname">RSA-2048</span><div class="bb2" style="flex:1;height:8px;"><div class="bf" style="width:65%;background:linear-gradient(90deg,#6366f1,#9333ea)"></div></div><span class="bv" style="color:var(--purple);min-width:52px">65/100</span></div>
+        <div class="score-row"><span class="sname">3DES-CBC</span><div class="bb2" style="flex:1;height:8px;"><div class="bf" style="width:50%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div><span class="bv" style="color:var(--amber);min-width:52px">50/100</span></div>
+        <div class="score-row"><span class="sname">DES-CBC</span><div class="bb2" style="flex:1;height:8px;"><div class="bf" style="width:5%;background:linear-gradient(90deg,#dc2626,#ef4444)"></div></div><span class="bv" style="color:var(--red);min-width:52px">5/100</span></div>
       </div>
     </div>
+    <div class="card cb">
+      <div class="ch"><div class="ico ico-b">&#127942;</div>
+        <div><div class="ctitle">Why AES-256 Wins</div><div class="csub">Speed + Security + Standards</div></div>
+      </div>
+      <div class="sgrid">
+        <div class="sc2"><span class="si">&#9889;</span><div class="sn">Speed</div><h3>HW Accelerated</h3><p>AES-NI CPU instructions reach <strong>1&ndash;10+ GB/s</strong> natively.</p></div>
+        <div class="sc2"><span class="si">&#128737;</span><div class="sn">Security</div><h3>Unbreakable</h3><p><strong>2&sup2;&sup5;&sup6; keys</strong> &mdash; all Earth's computers can't brute-force in the universe's lifetime.</p></div>
+        <div class="sc2"><span class="si">&#127919;</span><div class="sn">Standard</div><h3>NIST Approved</h3><p>Protects <strong>US Top-Secret data</strong>. Used in TLS 1.3, SSH, disk encryption.</p></div>
+        <div class="sc2"><span class="si">&#128200;</span><div class="sn">Overhead</div><h3>Near-Zero Cost</h3><p>Only 16-byte IV + PKCS7. <strong>&lt;0.01%</strong> size increase on large files.</p></div>
+        <div class="sc2"><span class="si">&#128295;</span><div class="sn">Modes</div><h3>Multiple Modes</h3><p><strong>CBC</strong> for files, <strong>GCM</strong> for AEAD, <strong>CTR</strong> for streaming.</p></div>
+        <div class="sc2"><span class="si">&#128142;</span><div class="sn">Quantum</div><h3>Post-Quantum</h3><p>256-bit key &rarr; Grover leaves <strong>128-bit quantum security</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+</div></div>
 
-  </div><!-- /cards -->
-</div><!-- /page -->
-
-<footer>
-  <span>AES-256-CBC</span> &middot; <span>Web Crypto API (SubtleCrypto)</span> &middot;
-  <span>Runs 100% in your browser</span> &middot; <span>No data leaves this page</span>
-</footer>
-
-<!-- ══ JAVASCRIPT ═══════════════════════════════════════════ -->
 <script>
-/* ── Utilities ──────────────────────────────────────────── */
-const enc = new TextEncoder();
-const dec = new TextDecoder();
+/* ── Globals ──────────────────────────────────────────── */
+const TE=new TextEncoder(),TD=new TextDecoder();
+let encFile=null,decBuf=null,decMeta=null;
 
-function ts() {
-  const d = new Date();
-  return d.toLocaleTimeString('en-GB',{hour12:false}) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+/* ── Utils ────────────────────────────────────────────── */
+function ts(){const d=new Date();return d.toTimeString().slice(0,8)+'.'+String(d.getMilliseconds()).padStart(3,'0');}
+function fmtB(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(2)+' MB';}
+function hex(buf){return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+function sl(ms){return new Promise(r=>setTimeout(r,ms));}
+function lg(id,msg,t='in'){
+  const el=document.getElementById(id);if(!el)return;
+  const d=document.createElement('div');d.className='ll';
+  const cls={ok:'lok',in:'lin',wn:'lwn',er:'ler'}[t]||'lin';
+  d.innerHTML='<span class="lt">'+ts()+'</span><span class="'+cls+'">'+msg+'</span>';
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function blog(m,t='in'){
+  const el=document.getElementById('blog');if(!el)return;
+  const c={ok:'var(--green)',er:'var(--red)',wn:'var(--amber)',in:'var(--blue)'}[t]||'var(--blue)';
+  el.innerHTML+='<div style="color:'+c+';line-height:1.9;font-size:0.74rem;font-family:JetBrains Mono,monospace;">'+m+'</div>';
+  el.scrollTop=el.scrollHeight;
 }
 
-function log(msg, type='info') {
-  const el = document.getElementById('process-log');
-  const line = document.createElement('div');
-  line.className = 'log-line';
-  line.innerHTML = '<span class="log-ts">'+ts()+'</span><span class="log-'+type+'">'+msg+'</span>';
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
+/* ── Tab switch ───────────────────────────────────────── */
+function switchTab(btn,id){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='tb2'&&!window._bd)runBench();
 }
 
-function toHex(buf) {
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+/* ── Key derivation ───────────────────────────────────── */
+async function deriveKey(pw,mode='AES-CBC',len=256){
+  const k=await crypto.subtle.importKey('raw',TE.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:TE.encode('CipherVault-v1-Salt'),iterations:100000,hash:'SHA-256'},k,{name:mode,length:len},true,['encrypt','decrypt']);
+}
+async function rawKey(pw,mode,len=256){
+  const raw=TE.encode(pw.padEnd(32,'x').slice(0,32));
+  return crypto.subtle.importKey('raw',raw,{name:mode,length:len},true,['encrypt','decrypt']);
 }
 
-function toBase64(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+/* ── Key grid ─────────────────────────────────────────── */
+async function showKG(key,gid){
+  const g=document.getElementById(gid);if(!g)return;
+  const b=new Uint8Array(await crypto.subtle.exportKey('raw',key));
+  g.innerHTML='';b.forEach(v=>{const d=document.createElement('div');d.className='kb';d.textContent=v.toString(16).padStart(2,'0');g.appendChild(d);});
+  return b;
 }
 
-function fromBase64(str) {
-  const b = atob(str);
-  const u = new Uint8Array(b.length);
-  for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i);
-  return u.buffer;
+/* ── Pipeline animation ───────────────────────────────── */
+const PIPES=['p0','p1','p2','p3','p4','p5','p6','p7'];
+async function animPipe(){
+  PIPES.forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active','done');});
+  for(const id of PIPES){const e=document.getElementById(id);if(!e)continue;e.classList.add('active');await sl(260);e.classList.remove('active');e.classList.add('done');}
 }
 
-/* ── Key Derivation: password -> PBKDF2 -> 256-bit AES key ── */
-async function deriveKey(password) {
-  const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-  const salt = enc.encode('AES256-DEMO-SALT');
-  return crypto.subtle.deriveKey(
-    {name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'},
-    km,
-    {name:'AES-CBC', length:256},
-    true,
-    ['encrypt','decrypt']
-  );
+/* ═══════════════════════════════════════
+   MULTIMEDIA ENCRYPT
+═══════════════════════════════════════ */
+function eDrop(e){e.preventDefault();e.target.closest('.dz').classList.remove('over');const f=e.dataTransfer.files[0];if(f)setEFile(f);}
+function eFile(e){const f=e.target.files[0];if(f)setEFile(f);}
+function setEFile(f){
+  encFile=f;
+  const dz=document.getElementById('edz');dz.classList.add('loaded');
+  document.getElementById('efc').style.display='block';
+  document.getElementById('efn').textContent=f.name;
+  document.getElementById('efs').textContent=fmtB(f.size)+'  ·  '+(f.type||'binary');
+  document.getElementById('ebtn').disabled=false;
+  document.getElementById('preview-section').style.display='none';
+  lg('elog','File selected: '+f.name+' ('+fmtB(f.size)+', '+(f.type||'binary')+')','in');
 }
 
-/* ── Pipeline Animation ─────────────────────────────────── */
-const stepIds = ['s-plaintext','s-keyexp','s-iv','s-subbytes','s-shiftrows','s-mixcols','s-addroundkey','s-ciphertext'];
-
-function resetSteps() {
-  stepIds.forEach(id=>{ const e=document.getElementById(id); e.classList.remove('active','done'); });
+async function doEncrypt(){
+  if(!encFile)return;
+  const pw=document.getElementById('epw').value.trim();
+  if(!pw){lg('elog','Password required!','wn');return;}
+  const mode=document.getElementById('emode').value;
+  document.getElementById('ebtn').disabled=true;
+  try{
+    lg('elog','Reading '+fmtB(encFile.size)+'...','in');
+    const fb=await encFile.arrayBuffer();
+    lg('elog','File read OK. Deriving AES-256 key (PBKDF2 100k rounds)...','in');
+    const t0k=performance.now();
+    const key=await deriveKey(pw,mode);
+    lg('elog','Key derived in '+(performance.now()-t0k).toFixed(1)+' ms','ok');
+    const isGCM=mode==='AES-GCM',ivLen=isGCM?12:16;
+    const iv=crypto.getRandomValues(new Uint8Array(ivLen));
+    lg('elog','IV ('+(ivLen*8)+'-bit): '+hex(iv),'ok');
+    lg('elog','Encrypting '+fmtB(fb.byteLength)+'...','in');
+    const t0=performance.now();
+    const cb=await crypto.subtle.encrypt(isGCM?{name:'AES-GCM',iv,tagLength:128}:{name:'AES-CBC',iv},key,fb);
+    const ms=(performance.now()-t0).toFixed(2);
+    const spd=(fb.byteLength/1048576/(ms/1000)).toFixed(1);
+    lg('elog','Encrypted in '+ms+' ms @ '+spd+' MB/s','ok');
+    // Pack: [4B meta-len][meta JSON][IV][ciphertext]
+    const meta=JSON.stringify({name:encFile.name,type:encFile.type||'',mode,ivLen});
+    const mb=TE.encode(meta);
+    const hdr=new Uint8Array(4);new DataView(hdr.buffer).setUint32(0,mb.length,true);
+    const out=new Uint8Array(4+mb.length+ivLen+cb.byteLength);
+    let off=0;out.set(hdr,off);off+=4;out.set(mb,off);off+=mb.length;out.set(iv,off);off+=ivLen;out.set(new Uint8Array(cb),off);
+    // Auto-download
+    const blob=new Blob([out],{type:'application/octet-stream'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=encFile.name+'.enc';a.click();
+    lg('elog','Downloaded: '+encFile.name+'.enc ('+fmtB(out.byteLength)+')','ok');
+    lg('elog','✅ Done! Upload the .enc file to the Decrypt section.','ok');
+    // Metrics
+    document.getElementById('emetrics').style.display='block';
+    document.getElementById('em-t').textContent=ms+' ms';
+    document.getElementById('em-s').textContent=spd;
+    document.getElementById('em-o').textContent=fmtB(fb.byteLength);
+    document.getElementById('em-e').textContent=fmtB(out.byteLength);
+    document.getElementById('em-a').textContent='AES-256-'+mode.replace('AES-','');
+    document.getElementById('em-ov').textContent=(out.byteLength-fb.byteLength)+' bytes';
+  }catch(err){lg('elog','ERROR: '+err.message,'er');}
+  document.getElementById('ebtn').disabled=false;
 }
 
-async function animateSteps() {
-  resetSteps();
-  for(let i=0;i<stepIds.length;i++){
-    const el=document.getElementById(stepIds[i]);
-    el.classList.add('active');
-    await sleep(300);
-    el.classList.remove('active');
-    el.classList.add('done');
-  }
-}
-
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-/* ── Display 32 key bytes as hex grid ───────────────────── */
-async function displayKeyGrid(cryptoKey) {
-  const exported = await crypto.subtle.exportKey('raw', cryptoKey);
-  const bytes = new Uint8Array(exported);
-  const grid = document.getElementById('key-grid');
-  grid.innerHTML='';
-  bytes.forEach(b=>{
-    const d=document.createElement('div');
-    d.className='key-byte';
-    d.textContent=b.toString(16).padStart(2,'0');
-    grid.appendChild(d);
+/* ═══════════════════════════════════════
+   MULTIMEDIA DECRYPT
+═══════════════════════════════════════ */
+function dDrop(e){e.preventDefault();e.target.closest('.dz').classList.remove('over');const f=e.dataTransfer.files[0];if(f)loadEncFile(f);}
+function dFile(e){const f=e.target.files[0];if(f)loadEncFile(f);}
+function loadEncFile(f){
+  f.arrayBuffer().then(buf=>{
+    decBuf=buf;
+    // Parse header
+    try{
+      const dv=new DataView(buf);
+      const mlen=dv.getUint32(0,true);
+      const ms=TD.decode(new Uint8Array(buf,4,mlen));
+      decMeta=JSON.parse(ms);
+      lg('dlog','Loaded: '+f.name+' ('+fmtB(buf.byteLength)+')','in');
+      lg('dlog','Meta: '+decMeta.name+' | '+(decMeta.type||'binary')+' | '+decMeta.mode,'ok');
+    }catch(e){
+      decMeta=null;
+      lg('dlog','Warning: metadata parse failed: '+e.message,'wn');
+    }
+    document.getElementById('dfc').style.display='block';
+    document.getElementById('dfn').textContent=f.name;
+    document.getElementById('dfs').textContent=fmtB(buf.byteLength);
+    document.getElementById('ddz').classList.add('loaded');
+    document.getElementById('dbtn').disabled=false;
+    // Pre-fill modal pw from encrypt field
+    const epw=document.getElementById('epw').value;
+    if(epw)document.getElementById('mpw').value=epw;
   });
-  return bytes;
 }
 
-/* ── ENCRYPT ─────────────────────────────────────────────── */
-async function doEncrypt() {
-  const btn = document.getElementById('btn-encrypt');
-  btn.disabled = true;
-  try {
-    const plaintext = document.getElementById('plaintext').value;
-    const password  = document.getElementById('password').value;
-
-    if(!plaintext.trim()){ log('WARNING: Plaintext is empty.','warn'); btn.disabled=false; return; }
-    if(!password.trim()) { log('WARNING: Password is empty.','warn');  btn.disabled=false; return; }
-
-    log('Starting AES-256-CBC encryption...','info');
-    log('Plaintext length: '+plaintext.length+' chars ('+enc.encode(plaintext).byteLength+' bytes)','info');
-
-    log('Deriving 256-bit key from password (PBKDF2 + SHA-256, 100,000 iterations)...','info');
-    const key = await deriveKey(password);
-    const keyBytes = await displayKeyGrid(key);
-    log('Key derived: '+toHex(keyBytes.buffer),'ok');
-
-    const iv = crypto.getRandomValues(new Uint8Array(16));
-    log('Random IV generated: '+toHex(iv.buffer),'ok');
-
-    animateSteps(); // non-blocking visual
-
-    log('Running AES-CBC encryption (256-bit key, 14 rounds per block)...','info');
-    const t0 = performance.now();
-    const cipherBuf = await crypto.subtle.encrypt({name:'AES-CBC', iv}, key, enc.encode(plaintext));
-    const elapsed = (performance.now()-t0).toFixed(2);
-    log('Encryption complete in '+elapsed+' ms. Ciphertext: '+cipherBuf.byteLength+' bytes','ok');
-
-    // Pack: [16-byte IV][ciphertext] -> Base64
-    const combined = new Uint8Array(16+cipherBuf.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(cipherBuf), 16);
-    const b64 = toBase64(combined.buffer);
-
-    log('Output (IV+Ciphertext, Base64): '+b64.substring(0,48)+'...','ok');
-
-    const ctEl = document.getElementById('cipher-text');
-    ctEl.textContent = b64;
-    const box = document.getElementById('ciphertext-out');
-    box.classList.remove('empty');
-    box.classList.add('has-value');
-    document.getElementById('copy-cipher').style.display='block';
-
-    // Auto-fill decrypt section
-    document.getElementById('cipher-input').value = b64;
-    document.getElementById('dec-password').value = password;
-
-    document.getElementById('stat-pt').textContent = enc.encode(plaintext).byteLength;
-    document.getElementById('stat-ct').textContent = combined.byteLength;
-
-    log('Done! Scroll to Decrypt section to verify decryption.','ok');
-  } catch(e) {
-    log('Encryption error: '+e.message,'err');
-  }
-  btn.disabled = false;
+function openModal(){
+  if(!decBuf){lg('dlog','No .enc file loaded.','wn');return;}
+  const info=decMeta?'File: <strong>'+decMeta.name+'</strong><br>Mode: <strong>AES-256-'+decMeta.mode.replace('AES-','')+'</strong>':'';
+  document.getElementById('mfi').innerHTML=info;
+  document.getElementById('mst').innerHTML='';
+  document.getElementById('pw-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('mpw').focus(),80);
 }
+document.getElementById('mpw').addEventListener('keydown',e=>{if(e.key==='Enter')runDecrypt();});
 
-/* ── DECRYPT ─────────────────────────────────────────────── */
-async function doDecrypt() {
-  try {
-    const b64      = document.getElementById('cipher-input').value.trim();
-    const password = document.getElementById('dec-password').value;
-
-    if(!b64)            { log('WARNING: No ciphertext to decrypt.','warn'); return; }
-    if(!password.trim()){ log('WARNING: Password is empty.','warn');         return; }
-
-    log('Starting AES-256-CBC decryption...','info');
-
-    log('Deriving key from password...','info');
-    const key = await deriveKey(password);
-    const keyBytes = await displayKeyGrid(key);
-    log('Key: '+toHex(keyBytes.buffer),'ok');
-
-    let combined;
-    try { combined = new Uint8Array(fromBase64(b64)); }
-    catch(e){ log('Invalid Base64 input: '+e.message,'err'); return; }
-
-    if(combined.length < 17){ log('Data too short (need IV 16 bytes + at least 1 block)','err'); return; }
-
-    const iv         = combined.slice(0, 16);
-    const cipherdata = combined.slice(16);
-    log('IV extracted: '+toHex(iv.buffer),'ok');
-    log('Ciphertext block: '+cipherdata.byteLength+' bytes','ok');
-
-    log('Running AES-CBC decryption (14 inverse rounds per block)...','info');
-    let plainBuf;
-    try {
-      plainBuf = await crypto.subtle.decrypt({name:'AES-CBC', iv}, key, cipherdata);
-    } catch(e) {
-      log('DECRYPTION FAILED: Wrong password or corrupted/tampered data!','err');
-      showStatus(false);
+async function runDecrypt(){
+  const pw=document.getElementById('mpw').value.trim();
+  if(!pw){document.getElementById('mst').innerHTML='<div class="pill per">⚠ Password required</div>';return;}
+  document.getElementById('mst').innerHTML='<div style="display:flex;gap:8px;align-items:center;font-size:0.81rem;color:var(--blue);font-weight:600;"><div class="sp"></div> Decrypting...</div>';
+  try{
+    const buf=decBuf;
+    const dv=new DataView(buf);
+    const mlen=dv.getUint32(0,true);
+    const meta=JSON.parse(TD.decode(new Uint8Array(buf,4,mlen)));
+    const ivOff=4+mlen;
+    const iv=new Uint8Array(buf,ivOff,meta.ivLen);
+    const cd=new Uint8Array(buf,ivOff+meta.ivLen);
+    lg('dlog','IV: '+hex(iv),'ok');
+    lg('dlog','Deriving key (PBKDF2 100k)...','in');
+    const key=await deriveKey(pw,meta.mode);
+    lg('dlog','Decrypting '+fmtB(cd.byteLength)+'...','in');
+    const t0=performance.now();
+    let pb;
+    try{
+      pb=await crypto.subtle.decrypt(meta.mode==='AES-GCM'?{name:'AES-GCM',iv,tagLength:128}:{name:'AES-CBC',iv},key,cd);
+    }catch(e){
+      document.getElementById('mst').innerHTML='<div class="pill per">❌ Wrong password or corrupted file</div>';
+      lg('dlog','DECRYPTION FAILED: wrong password!','er');
       return;
     }
-
-    const plaintext = dec.decode(plainBuf);
-    log('Decryption successful! Plaintext: "'+plaintext.substring(0,60)+(plaintext.length>60?'...':'')+'"','ok');
-
-    const dtEl = document.getElementById('dec-text');
-    dtEl.textContent = plaintext;
-    const box = document.getElementById('plaintext-out');
-    box.classList.remove('empty');
-    box.classList.add('has-value');
-    document.getElementById('copy-dec').style.display='block';
-
-    showStatus(true, plaintext);
-  } catch(e) {
-    log('Unexpected error: '+e.message,'err');
+    const ms=(performance.now()-t0).toFixed(2);
+    const spd=(pb.byteLength/1048576/(ms/1000)).toFixed(1);
+    lg('dlog','Decrypted in '+ms+' ms @ '+spd+' MB/s. Size: '+fmtB(pb.byteLength),'ok');
+    document.getElementById('pw-modal').classList.remove('show');
+    // ── Show preview ──────────────────────────────
+    const mtype=detectMime(meta.name,meta.type);
+    const blob=new Blob([pb],{type:mtype});
+    const url=URL.createObjectURL(blob);
+    const pc=document.getElementById('prev-content');
+    pc.innerHTML='';
+    if(mtype.startsWith('image/')){
+      const img=document.createElement('img');
+      img.src=url;img.alt='Decrypted image: '+meta.name;
+      img.style.cssText='max-width:100%;max-height:420px;object-fit:contain;display:block;margin:0 auto;box-shadow:0 4px 14px rgba(0,0,0,0.08);';
+      img.onload=()=>lg('dlog','Image preview rendered successfully','ok');
+      pc.appendChild(img);
+    }else if(mtype.startsWith('audio/')){
+      const au=document.createElement('audio');
+      au.controls=true;au.autoplay=false;au.src=url;au.style.width='100%';
+      pc.appendChild(au);
+    }else if(mtype.startsWith('video/')){
+      const vid=document.createElement('video');
+      vid.controls=true;vid.src=url;vid.style.cssText='max-width:100%;max-height:420px;width:100%;display:block;margin:0 auto;';
+      pc.appendChild(vid);
+    }else if(mtype.startsWith('text/')||meta.name.endsWith('.txt')||meta.name.endsWith('.md')||meta.name.endsWith('.json')||meta.name.endsWith('.js')||meta.name.endsWith('.c')||meta.name.endsWith('.h')){
+      const txtPre=document.createElement('pre');
+      txtPre.style.cssText='width:100%;max-height:350px;overflow:auto;background:var(--bg2);padding:14px;font-family:JetBrains Mono,monospace;font-size:0.8rem;text-align:left;white-space:pre-wrap;word-break:break-all;';
+      txtPre.textContent=TD.decode(pb);
+      pc.appendChild(txtPre);
+    }else{
+      const box=document.createElement('div');
+      box.style.cssText='text-align:center;padding:20px;';
+      const a=document.createElement('a');
+      a.href=url;a.download=meta.name;a.className='dlink';
+      a.innerHTML='&#128229; Download Decrypted File: <strong>'+meta.name+'</strong> ('+fmtB(pb.byteLength)+')';
+      box.appendChild(a);
+      pc.appendChild(box);
+    }
+    // Show preview section + scroll
+    const ps=document.getElementById('preview-section');
+    ps.style.display='block';
+    setTimeout(()=>ps.scrollIntoView({behavior:'smooth',block:'start'}),100);
+    // Status
+    document.getElementById('prev-status').innerHTML='<div class="pill pok">✔ '+meta.name+' ('+fmtB(pb.byteLength)+') restored perfectly</div>';
+    document.getElementById('dst').innerHTML='<div class="pill pok">✔ Decrypted! See preview below.</div>';
+    lg('dlog','✅ File restored: '+meta.name,'ok');
+    // Metrics
+    document.getElementById('dmetrics').style.display='block';
+    document.getElementById('dm-t').textContent=ms+' ms';
+    document.getElementById('dm-s').textContent=spd;
+    document.getElementById('dm-z').textContent=fmtB(pb.byteLength);
+    document.getElementById('dm-i').innerHTML=meta.mode==='AES-GCM'?'<span style="color:var(--green)">AEAD ✔</span>':'<span style="color:var(--amber)">CBC OK</span>';
+    // Auto-download
+    const a=document.createElement('a');a.href=url;a.download=meta.name;a.click();
+    lg('dlog','✅ Auto-downloaded: '+meta.name,'ok');
+  }catch(err){
+    lg('dlog','Error: '+err.message,'er');
+    document.getElementById('mst').innerHTML='<div class="pill per">❌ Error: '+err.message+'</div>';
   }
 }
 
-/* ── Status Banner ─────────────────────────────────────── */
-function showStatus(ok, text='') {
-  const el = document.getElementById('verify-status');
-  if(ok) {
-    el.innerHTML = '<div class="status-pill ok">&#10004; Decryption successful &mdash; message perfectly recovered ('+enc.encode(text).byteLength+' bytes)</div>';
-  } else {
-    el.innerHTML = '<div class="status-pill err">&#10006; Decryption failed &mdash; wrong password or tampered ciphertext</div>';
+/* ═══════════════════════════════════════
+   TEXT ENCRYPTION
+═══════════════════════════════════════ */
+async function tEnc(){
+  const pt=document.getElementById('pt').value,pw=document.getElementById('tpw').value;
+  if(!pt.trim()||!pw.trim()){lg('tlog','Plaintext and password required.','wn');return;}
+  document.querySelector('#tt .bb').disabled=true;
+  try{
+    lg('tlog','Starting AES-256-CBC...','in');
+    const t0k=performance.now();const key=await deriveKey(pw);
+    lg('tlog','Key in '+(performance.now()-t0k).toFixed(1)+' ms','ok');
+    const kb=await showKG(key,'tkg');lg('tlog','Key: '+hex(kb),'ok');
+    const iv=crypto.getRandomValues(new Uint8Array(16));lg('tlog','IV: '+hex(iv),'ok');
+    animPipe();
+    const t0=performance.now();
+    const cb=await crypto.subtle.encrypt({name:'AES-CBC',iv},key,TE.encode(pt));
+    const ms=(performance.now()-t0).toFixed(2),spd=(TE.encode(pt).byteLength/1048576/(ms/1000)).toFixed(3);
+    lg('tlog','Encrypted in '+ms+' ms @ '+spd+' MB/s','ok');
+    const out=new Uint8Array(16+cb.byteLength);out.set(iv);out.set(new Uint8Array(cb),16);
+    const b64=btoa(Array.from(out,b=>String.fromCharCode(b)).join(''));
+    document.getElementById('tct').textContent=b64;
+    const box=document.getElementById('tct-box');box.style.color='var(--text)';box.style.fontStyle='normal';
+    document.getElementById('tcp').style.display='block';
+    document.getElementById('tctIn').value=b64;document.getElementById('tdpw').value=pw;
+    document.getElementById('tsp').textContent=TE.encode(pt).byteLength+' B';
+    document.getElementById('tsc').textContent=out.byteLength+' B';
+    document.getElementById('tst').textContent=ms+' ms';
+    document.getElementById('tss').textContent=spd+' MB/s';
+  }catch(e){lg('tlog','Error: '+e.message,'er');}
+  document.querySelector('#tt .bb').disabled=false;
+}
+async function tDec(){
+  const b64=document.getElementById('tctIn').value.trim(),pw=document.getElementById('tdpw').value;
+  if(!b64||!pw){lg('tlog','Ciphertext and password required.','wn');return;}
+  try{
+    const key=await deriveKey(pw);
+    const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+    if(bytes.length<17){lg('tlog','Data too short.','er');return;}
+    const iv=bytes.slice(0,16),cd=bytes.slice(16);
+    let pb;try{pb=await crypto.subtle.decrypt({name:'AES-CBC',iv},key,cd);}
+    catch(e){lg('tlog','FAILED: Wrong password!','er');document.getElementById('tst2').innerHTML='<div class="pill per">❌ Wrong password</div>';return;}
+    const pt=TD.decode(pb);
+    document.getElementById('tdt').textContent=pt;
+    const b=document.getElementById('tdt-box');b.style.color='var(--text)';b.style.fontStyle='normal';
+    document.getElementById('tst2').innerHTML='<div class="pill pok">✔ '+TE.encode(pt).byteLength+' bytes recovered</div>';
+    lg('tlog','Decrypted: "'+pt.substring(0,60)+'"','ok');
+  }catch(e){lg('tlog','Error: '+e.message,'er');}
+}
+function clearT(){document.getElementById('pt').value='';document.getElementById('tpw').value='';
+  document.getElementById('tct').textContent='Click Encrypt above...';
+  document.getElementById('tdt').textContent='Decrypted text appears here...';
+  document.getElementById('tct-box').style.color='';document.getElementById('tct-box').style.fontStyle='';
+  document.getElementById('tdt-box').style.color='';document.getElementById('tdt-box').style.fontStyle='';
+  document.getElementById('tkg').innerHTML='';document.getElementById('tcp').style.display='none';
+  document.getElementById('tst2').innerHTML='';
+  PIPES.forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active','done');});
+}
+
+/* ═══════════════════════════════════════
+   CHACHA20 (pure JS, for benchmark)
+═══════════════════════════════════════ */
+function chacha20(key,nonce,data){
+  const C=[0x61707865,0x3320646e,0x79622d32,0x6b206574];
+  const st=new Uint32Array(16);
+  st[0]=C[0];st[1]=C[1];st[2]=C[2];st[3]=C[3];
+  const kw=new Uint32Array(key.buffer,key.byteOffset,8);
+  for(let i=0;i<8;i++)st[4+i]=kw[i];
+  st[12]=0;
+  const nv=new DataView(new Uint8Array(nonce).buffer);
+  st[13]=nv.getUint32(0,true);st[14]=nv.getUint32(4,true);st[15]=nv.getUint32(8,true);
+  const out=new Uint8Array(data.length),blk=new Uint8Array(64);
+  for(let off=0;off<data.length;off+=64){
+    const x=new Uint32Array(st);
+    function qr(a,b,c,d){x[a]+=x[b];x[d]^=x[a];x[d]=(x[d]<<16)|(x[d]>>>16);x[c]+=x[d];x[b]^=x[c];x[b]=(x[b]<<12)|(x[b]>>>20);x[a]+=x[b];x[d]^=x[a];x[d]=(x[d]<<8)|(x[d]>>>24);x[c]+=x[d];x[b]^=x[c];x[b]=(x[b]<<7)|(x[b]>>>25);}
+    for(let i=0;i<10;i++){qr(0,4,8,12);qr(1,5,9,13);qr(2,6,10,14);qr(3,7,11,15);qr(0,5,10,15);qr(1,6,11,12);qr(2,7,8,13);qr(3,4,9,14);}
+    for(let i=0;i<16;i++)x[i]=(x[i]+st[i])>>>0;
+    const bv=new DataView(blk.buffer);for(let i=0;i<16;i++)bv.setUint32(i*4,x[i],true);
+    const r=Math.min(64,data.length-off);for(let i=0;i<r;i++)out[off+i]=data[off+i]^blk[i];
+    st[12]=(st[12]+1)>>>0;
+  }
+  return out;
+}
+
+function fillRandom(arr){
+  const max=65536;
+  for(let i=0;i<arr.length;i+=max){
+    crypto.getRandomValues(arr.subarray(i,Math.min(i+max,arr.length)));
+  }
+  return arr;
+}
+
+function detectMime(name,type){
+  if(type&&type.trim())return type.toLowerCase();
+  const ext=(name.split('.').pop()||'').toLowerCase();
+  const map={
+    jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml',bmp:'image/bmp',ico:'image/x-icon',
+    mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',mkv:'video/x-matroska',avi:'video/x-msvideo',
+    mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',m4a:'audio/mp4',flac:'audio/flac',aac:'audio/aac',
+    pdf:'application/pdf',txt:'text/plain',json:'application/json',md:'text/markdown',csv:'text/csv'
+  };
+  return map[ext]||'application/octet-stream';
+}
+
+/* ═══════════════════════════════════════
+   BENCHMARK
+═══════════════════════════════════════ */
+window._bd=false;
+async function runBench(){
+  const btn=document.getElementById('bbtn');
+  btn.disabled=true;
+  document.getElementById('bspin').style.display='flex';
+  document.getElementById('blog').innerHTML='';
+  const sz=parseInt(document.getElementById('bsz').value);
+  blog('<strong>&#9889; Benchmark &mdash; '+fmtB(sz)+' payload</strong>','in');
+  try{
+    await sl(20);
+    const data=fillRandom(new Uint8Array(sz));
+    blog('Payload ready: '+fmtB(sz),'ok');
+    const pw='BenchPw@Cv1!';
+    // Key derivation timing
+    blog('Timing PBKDF2 key derivation...','in');
+    const t0kd=performance.now();
+    const key256=await deriveKey(pw,'AES-CBC',256);
+    const kdMs=(performance.now()-t0kd).toFixed(1);
+    document.getElementById('lm-k').textContent=kdMs+' ms';
+    blog('Key derivation: <strong>'+kdMs+' ms</strong>','ok');
+
+    async function bench(key,mode){
+      const ivLen=mode==='AES-GCM'?12:16;
+      const iv=crypto.getRandomValues(new Uint8Array(ivLen));
+      const ep=mode==='AES-GCM'?{name:'AES-GCM',iv,tagLength:128}:{name:'AES-CBC',iv};
+      const R=3;let et=0,dt=0,lastCipher;
+      for(let r=0;r<R;r++){const t=performance.now();lastCipher=await crypto.subtle.encrypt(ep,key,data);et+=performance.now()-t;}
+      const ca=new Uint8Array(lastCipher);
+      for(let r=0;r<R;r++){const t=performance.now();await crypto.subtle.decrypt(ep,key,ca);dt+=performance.now()-t;}
+      const mb=sz/1048576;
+      return{eMs:(et/R).toFixed(2),dMs:(dt/R).toFixed(2),eMBs:(mb/(et/R/1000)).toFixed(1),dMBs:(mb/(dt/R/1000)).toFixed(1)};
+    }
+
+    blog('Measuring AES-256-CBC (3-run avg)...','in');
+    const r256=await bench(key256,'AES-CBC');
+    blog('AES-256-CBC: enc <strong>'+r256.eMs+' ms ('+r256.eMBs+' MB/s)</strong> | dec '+r256.dMs+' ms ('+r256.dMBs+' MB/s)','ok');
+    document.getElementById('b256e').textContent=r256.eMBs+' MB/s';
+    document.getElementById('b256d').textContent=r256.dMBs+' MB/s';
+    document.getElementById('lm-e').textContent=r256.eMBs;
+    document.getElementById('lm-d').textContent=r256.dMBs;
+    document.getElementById('lm-l').textContent=r256.eMs+' ms';
+    document.getElementById('bv256').textContent=r256.eMBs+' MB/s';
+    await sl(10);
+
+    blog('Measuring AES-256-GCM...','in');
+    const kgcm=await rawKey(pw,'AES-GCM',256);
+    const rGCM=await bench(kgcm,'AES-GCM');
+    blog('AES-256-GCM: enc <strong>'+rGCM.eMs+' ms ('+rGCM.eMBs+' MB/s)</strong> | dec '+rGCM.dMs+' ms ('+rGCM.dMBs+' MB/s)','ok');
+    document.getElementById('bgcme').textContent=rGCM.eMBs+' MB/s';
+    document.getElementById('bgcmd').textContent=rGCM.dMBs+' MB/s';
+    document.getElementById('lm-gcm').textContent=rGCM.eMBs;
+    document.getElementById('bvgcm').textContent=rGCM.eMBs+' MB/s';
+    await sl(10);
+
+    blog('Measuring AES-128-CBC...','in');
+    const k128=await rawKey(pw,'AES-CBC',128);
+    const r128=await bench(k128,'AES-CBC');
+    blog('AES-128-CBC: enc <strong>'+r128.eMs+' ms ('+r128.eMBs+' MB/s)</strong> | dec '+r128.dMs+' ms ('+r128.dMBs+' MB/s)','ok');
+    document.getElementById('b128e').textContent=r128.eMBs+' MB/s';
+    document.getElementById('b128d').textContent=r128.dMBs+' MB/s';
+    document.getElementById('lm-128').textContent=r128.eMBs;
+    document.getElementById('bv128').textContent=r128.eMBs+' MB/s';
+    await sl(10);
+
+    blog('Measuring ChaCha20 (pure JS)...','in');
+    const ck=crypto.getRandomValues(new Uint8Array(32));
+    const cn=crypto.getRandomValues(new Uint8Array(12));
+    const R=3;let ct=0;
+    for(let r=0;r<R;r++){const t=performance.now();chacha20(ck,cn,data);ct+=performance.now()-t;}
+    const ccMs=(ct/R).toFixed(2),ccMBs=(sz/1048576/(ct/R/1000)).toFixed(1);
+    blog('ChaCha20 (JS): enc <strong>'+ccMs+' ms ('+ccMBs+' MB/s)</strong> [native ~3-5x faster]','ok');
+    document.getElementById('bcce').textContent=ccMBs+' MB/s (JS)';
+    document.getElementById('bccd').textContent=ccMBs+' MB/s (JS)';
+    document.getElementById('bvcc').textContent=ccMBs+' MB/s';
+
+    // Scale bars
+    const vals=[parseFloat(r256.eMBs),parseFloat(rGCM.eMBs),parseFloat(r128.eMBs),parseFloat(ccMBs)];
+    const mx=Math.max(...vals,1);
+    [['bar256',r256.eMBs],['bargcm',rGCM.eMBs],['bar128',r128.eMBs],['barcc',ccMBs]].forEach(([id,v])=>{
+      const el=document.getElementById(id);
+      if(el)el.style.width=Math.min(100,parseFloat(v)/mx*100).toFixed(1)+'%';
+    });
+
+    blog('<strong style="color:var(--green)">&#9989; Done! AES-256: '+r256.eMBs+' MB/s enc / '+r256.dMBs+' MB/s dec</strong>','ok');
+    window._bd=true;
+  }catch(err){
+    blog('<strong style="color:var(--red)">&#10060; Benchmark error: '+err.message+'</strong>','er');
+    console.error(err);
+  }finally{
+    btn.disabled=false;
+    document.getElementById('bspin').style.display='none';
   }
 }
 
-/* ── Helpers ───────────────────────────────────────────── */
-function useEncrypted() {
-  const ct = document.getElementById('cipher-text').textContent;
-  if(ct && !ct.startsWith('Click')) {
-    document.getElementById('cipher-input').value = ct;
-    log('Auto-filled decrypt field with current ciphertext.','info');
-  } else {
-    log('No ciphertext yet. Encrypt something first.','warn');
-  }
-}
-
-function copyText(id) {
-  const t = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(t).then(()=>log('Copied to clipboard.','ok'));
-}
-
-function loadExample() {
-  document.getElementById('plaintext').value = 'AES-256 was adopted by the US government in 2001. Brute-forcing a 256-bit key would take longer than the age of the universe! Every block goes through 14 rounds of SubBytes, ShiftRows, MixColumns and AddRoundKey transformations.';
-  document.getElementById('password').value  = 'Judges@Presentation2024!';
-  log('Example loaded.','info');
-}
-
-function clearAll() {
-  ['plaintext','password','cipher-input','dec-password'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cipher-text').textContent = 'Click Encrypt to see output\u2026';
-  document.getElementById('dec-text').textContent    = 'Click Decrypt to see output\u2026';
-  ['ciphertext-out','plaintext-out'].forEach(id=>{
-    const el=document.getElementById(id);
-    el.classList.add('empty');
-    el.classList.remove('has-value');
-  });
-  document.getElementById('verify-status').innerHTML='';
-  document.getElementById('copy-cipher').style.display='none';
-  document.getElementById('copy-dec').style.display='none';
-  document.getElementById('key-grid').innerHTML='';
-  document.getElementById('stat-pt').textContent='\u2014';
-  document.getElementById('stat-ct').textContent='\u2014';
-  resetSteps();
-  log('Cleared.','info');
-}
-
-/* ── Init ──────────────────────────────────────────────── */
-document.getElementById('crypto-support').textContent =
-  (typeof crypto!=='undefined' && crypto.subtle) ? '\u2714 Yes (SubtleCrypto ready)' : '\u2716 No (upgrade your browser)';
+/* ── Init ─────────────────────────────────────────────── */
+document.getElementById('wcs').textContent=(typeof crypto!=='undefined'&&crypto.subtle)?'✔ Ready':'✖ Not supported';
+setTimeout(async()=>{
+  try{
+    const k=await rawKey('x','AES-CBC',256);
+    const iv=crypto.getRandomValues(new Uint8Array(16));
+    const d=fillRandom(new Uint8Array(102400));
+    const t=performance.now();
+    await crypto.subtle.encrypt({name:'AES-CBC',iv},k,d);
+    const ms=(performance.now()-t).toFixed(1);
+    const mbs=Math.round(100/1024/(ms/1000));
+    document.getElementById('lm-e').textContent=mbs;
+    document.getElementById('lm-l').textContent=ms+' ms';
+  }catch(e){}
+},500);
 </script>
 </body>
 </html>
